@@ -1,0 +1,58 @@
+﻿@{
+    Layout = "_LayoutExterno";
+}
+
+@model InicioSesionModel
+
+<div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+        <div class="authentication-inner">
+            <!-- Register -->
+            <div class="card px-sm-6 px-0">
+                <div class="card-body">
+                    <!-- /Logo -->
+                    <h4 class="mb-1">Iniciar Sesión 👋</h4>
+
+                    <form asp-action="IniciarSesion" asp-controller="Home" method="post">
+                        <div class="mb-6">
+                            <label asp-for="CorreoElectronico" class="form-label">Correo Electrónico</label>
+                            <input type="text"
+                                   class="form-control"
+                                   asp-for="CorreoElectronico"
+                                   placeholder="Correo Electrónico"
+                                   autofocus />
+                        </div>
+                        <div class="mb-6 form-password-toggle">
+                            <label class="form-label" asp-for="Contrasenna">Contraseña</label>
+                            <div class="input-group input-group-merge">
+                                <input type="password"
+                                       class="form-control"
+                                       asp-for="Contrasenna"
+                                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                                       aria-describedby="password" />
+                                <span class="input-group-text cursor-pointer"><i class="icon-base bx bx-hide"></i></span>
+                            </div>
+                        </div>
+                        <div class="mb-8">
+                            <div class="d-flex justify-content-between">
+                                <a class="font-bold" asp-action="RecuperarAcceso" asp-controller="Home">
+                                    <span>¿Olvidó su contraseña?</span>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mb-6">
+                            <button class="btn btn-primary d-grid w-100" type="submit">Acceder</button>
+                        </div>
+                    </form>
+
+                    <p class="text-center">
+                        <span>¿Aún no tienes cuenta?</span>
+                        <a asp-action="RegistrarUsuario" asp-controller="Home">
+                            <span>Crear Cuenta</span>
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
