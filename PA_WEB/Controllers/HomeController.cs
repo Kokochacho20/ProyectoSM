@@ -5,22 +5,34 @@ namespace PA_WEB.Controllers
 {
     public class HomeController : Controller
     {
+        [HttpGet]
         public IActionResult Index()
         {
-            return View();
+            return View(new InicioSesionModel());
         }
 
         [HttpPost]
         public IActionResult IniciarSesion(InicioSesionModel model)
         {
-            // implementar logica de inicio
             return RedirectToAction("Inicio", "Home");
         }
 
         [HttpGet]
         public IActionResult RegistrarUsuario()
         {
-            return View();
+            return View(new RegistrarUsuarioModel());
+        }
+
+        [HttpPost]
+        public IActionResult RegistrarUsuario(RegistrarUsuarioModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            TempData["MensajeRegistro"] = "Usuario registrado correctamente. Ahora puede iniciar sesión.";
+            return RedirectToAction("Index", "Home");
         }
 
         [HttpGet]

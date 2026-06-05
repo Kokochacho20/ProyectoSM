@@ -1,0 +1,115 @@
+﻿@model RegistrarUsuarioModel
+
+@{
+    Layout = "_LayoutExterno";
+    ViewData["Title"] = "Registro de Usuario";
+}
+
+<div class="container-xxl">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+        <div class="authentication-inner">
+
+            <div class="card px-sm-6 px-0">
+                <div class="card-body">
+
+                    <h4 class="mb-1">Registro de Usuario</h4>
+                    <p class="mb-6">Complete la información para crear su cuenta en el sistema de citas médicas.</p>
+
+                    <form asp-action="RegistrarUsuario" asp-controller="Home" method="post">
+
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-6">
+                            <label asp-for="Identificacion" class="form-label"></label>
+                            <input type="text"
+                                   class="form-control"
+                                   asp-for="Identificacion"
+                                   placeholder="Ingrese su identificación"
+                                   autofocus />
+                            <span asp-validation-for="Identificacion" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="Nombre" class="form-label"></label>
+                            <input type="text"
+                                   class="form-control"
+                                   asp-for="Nombre"
+                                   placeholder="Ingrese su nombre completo" />
+                            <span asp-validation-for="Nombre" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="CorreoElectronico" class="form-label"></label>
+                            <input type="text"
+                                   class="form-control"
+                                   asp-for="CorreoElectronico"
+                                   placeholder="Ingrese su correo electrónico" />
+                            <span asp-validation-for="CorreoElectronico" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="Telefono" class="form-label"></label>
+                            <input type="text"
+                                   class="form-control"
+                                   asp-for="Telefono"
+                                   placeholder="Ingrese su número de teléfono" />
+                            <span asp-validation-for="Telefono" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <label asp-for="FechaNacimiento" class="form-label"></label>
+                            <input type="date"
+                                   class="form-control"
+                                   asp-for="FechaNacimiento" />
+                            <span asp-validation-for="FechaNacimiento" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6 form-password-toggle">
+                            <label asp-for="Contrasenna" class="form-label"></label>
+                            <div class="input-group input-group-merge">
+                                <input type="password"
+                                       class="form-control"
+                                       asp-for="Contrasenna"
+                                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                <span class="input-group-text cursor-pointer">
+                                    <i class="icon-base bx bx-hide"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="Contrasenna" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6 form-password-toggle">
+                            <label asp-for="ConfirmarContrasenna" class="form-label"></label>
+                            <div class="input-group input-group-merge">
+                                <input type="password"
+                                       class="form-control"
+                                       asp-for="ConfirmarContrasenna"
+                                       placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;" />
+                                <span class="input-group-text cursor-pointer">
+                                    <i class="icon-base bx bx-hide"></i>
+                                </span>
+                            </div>
+                            <span asp-validation-for="ConfirmarContrasenna" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-6">
+                            <button class="btn btn-primary d-grid w-100" type="submit">
+                                Crear Cuenta
+                            </button>
+                        </div>
+
+                    </form>
+
+                    <p class="text-center">
+                        <span>¿Ya tienes una cuenta?</span>
+                        <a asp-action="Index" asp-controller="Home">
+                            <span>Iniciar Sesión</span>
+                        </a>
+                    </p>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
