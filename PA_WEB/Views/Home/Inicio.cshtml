@@ -1,16 +1,155 @@
-﻿
-<div class="col-10">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Progra Avanzada Web</h5>
-            <p class="card-text">
-                Sitio en construccion...
-            </p>
-            <p class="card-text">
-                <small class="text-body-secondary">Lorem ipsum!</small>
-            </p>
+﻿<section class="py-5 bg-hero">
+    <style>
+        .bg-hero{ background: linear-gradient(180deg,#f4f7fb 0%, #ffffff 100%); }
+        .bg-clinic{ background: linear-gradient(90deg,#6c63ff,#5db0ff); color:#fff; }
+        /* Ensure heading and subtitle contrast on the gradient header */
+        .card-header.bg-clinic h3 { color: #fff !important; }
+        .card-header.bg-clinic small { color: rgba(255,255,255,0.95) !important; }
+        .bg-soft{ background: rgba(93,176,255,0.08); border-radius:8px; }
+        .btn-primary{ background: linear-gradient(90deg,#6c63ff,#5db0ff); border: none; }
+        .btn-primary:hover{ filter:brightness(.98); }
+        .card.shadow-lg{ box-shadow: 0 10px 30px rgba(73,73,88,0.06); }
+        .icon{ width:56px; height:56px; display:flex; align-items:center; justify-content:center; border-radius:10px; }
+        @@media (max-width: 767px){
+            .col-lg-5 { margin-top: .75rem; }
+        }
+    </style>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="row g-4 align-items-center">
+                    <div class="col-lg-7">
+                        <div class="card shadow-lg" style="border-radius:14px; overflow:hidden;">
+                            <div class="card-header bg-clinic p-4 text-white">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h3 class="mb-0">Agendar cita médica</h3>
+                                        <small class="opacity-75">Rápido, sencillo y profesional. Complete los datos y seleccione una fecha disponible.</small>
+                                    </div>
+                                    <div class="d-none d-md-block text-end">
+                                        <div class="fw-bold">Clínica SM</div>
+                                        <small>Atención de calidad</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <form class="row g-3" method="post" action="#">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nombre completo</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-user"></i></span>
+                                            <input type="text" class="form-control" placeholder="Ana Pérez" required />
+                                        </div>
+                                        <small class="text-muted">Nombre tal como figura en su documento</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Teléfono</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-phone"></i></span>
+                                            <input type="tel" class="form-control" placeholder="(555) 123-4567" />
+                                        </div>
+                                        <small class="text-muted">Número para confirmar su cita</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Correo electrónico</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-envelope"></i></span>
+                                            <input type="email" class="form-control" placeholder="correo@ejemplo.com" />
+                                        </div>
+                                        <small class="text-muted">Recibirá confirmación y recordatorios</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Especialidad</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-briefcase"></i></span>
+                                            <select class="form-select">
+                                                <option>Medicina General</option>
+                                                <option>Cardiología</option>
+                                                <option>Pediatría</option>
+                                                <option>Ginecología</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label">Fecha</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-calendar"></i></span>
+                                            <input type="date" class="form-control" />
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Hora</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white"><i class="bx bx-time-five"></i></span>
+                                            <input type="time" class="form-control" />
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <label class="form-label">Motivo / notas</label>
+                                        <textarea class="form-control" rows="3" placeholder="Breve descripción"></textarea>
+                                        <small class="text-muted">Describa brevemente el motivo para ayudar al especialista a prepararse.</small>
+                                    </div>
+
+                                    <div class="col-12 d-flex justify-content-between align-items-center">
+                                        <div class="text-muted small">Protegemos sus datos y cumplimos con la privacidad</div>
+                                        <div>
+                                            <button type="submit" class="btn btn-primary btn-lg">Solicitar cita</button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm" style="border-radius:12px;">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-start gap-3 mb-3">
+                                    <div class="icon bg-soft p-3 rounded-3">
+                                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                          <rect x="2" y="3" width="20" height="18" rx="2" fill="#5db0ff" />
+                                          <path d="M12 7v10" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                          <path d="M8 11h8" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h5 class="mb-1">Información rápida</h5>
+                                        <p class="text-muted small mb-0">Encuentre horarios, contacto y opciones de especialistas de manera rápida.</p>
+                                    </div>
+                                </div>
+
+                                <div class="p-3 rounded-3 bg-primary text-white mb-3">
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <small>Horario</small>
+                                            <div class="fw-bold">Lun - Vie · 8:00 - 18:00</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <small>Tel.</small>
+                                            <div class="fw-bold">(555) 123-4567</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <ul class="list-unstyled mb-3">
+                                    <li class="mb-2"><i class="bx bx-check-circle text-success me-2"></i>Confirmación por email</li>
+                                    <li class="mb-2"><i class="bx bx-check-circle text-success me-2"></i>Recordatorios SMS</li>
+                                    <li class="mb-2"><i class="bx bx-check-circle text-success me-2"></i>Profesionales certificados</li>
+                                </ul>
+
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-outline-primary" href="#">Ver especialistas</a>
+                                    <a class="btn btn-light border" href="#">Contacto</a>
+                                </div>
+
+                                <div class="mt-3 text-center text-muted small">Diseño moderno y confiable — Clínica SM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-        
+</section>

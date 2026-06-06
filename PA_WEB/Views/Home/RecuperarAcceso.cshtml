@@ -9,37 +9,29 @@
     <div class="authentication-wrapper authentication-basic container-p-y">
         <div class="authentication-inner">
 
-            <div class="card px-sm-6 px-0">
+            <div class="card px-sm-6 px-0 shadow-sm">
                 <div class="card-body">
 
-                    <h4 class="mb-1">RecuperarAcceso</h4>
-                    <p class="mb-6">Ingrese su correo electrónico para para recibir indicaciones sobre cómo recuperar su acceso.</p>
+                    <h4 class="mb-1">Recuperar acceso</h4>
+                    <p class="mb-6 text-muted">Ingrese su correo electrónico para recibir indicaciones sobre cómo recuperar su acceso.</p>
 
                     <form asp-action="Inicio" asp-controller="Home" method="post">
 
-                        <div class="mb-6">
+                        <div class="mb-3">
                             <label asp-for="CorreoElectronico" class="form-label">Correo Electrónico</label>
-                            <input type="text"
-                                   class="form-control"
-                                   asp-for="CorreoElectronico"
-                                   placeholder="Correo Electrónico"
-                                   autofocus />
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bx bx-envelope"></i></span>
+                                <input type="text" class="form-control" asp-for="CorreoElectronico" placeholder="correo@ejemplo.com" autofocus />
+                            </div>
                         </div>
 
-                        <div class="mb-6">
-                            <button class="btn btn-primary d-grid w-100" type="submit">
-                                Enviar
-                            </button>
+                        <div class="mb-3">
+                            <button class="btn btn-primary d-grid w-100" type="submit">Enviar</button>
                         </div>
 
                     </form>
 
-                    <p class="text-center">
-                        <span>¿Recuerda Su Contraseña?</span>
-                        <a asp-action="Index" asp-controller="Home">
-                            <span>Iniciar Sesión</span>
-                        </a>
-                    </p>
+                    <p class="text-center small text-muted">¿Recuerda su contraseña? <a asp-action="Index" asp-controller="Home">Iniciar sesión</a></p>
 
                 </div>
             </div>

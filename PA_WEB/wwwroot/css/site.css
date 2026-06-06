@@ -2,6 +2,25 @@ html {
   font-size: 14px;
 }
 
+.bg-hero {
+  background-image: url('/assets/img/layouts/layout-container-light.png');
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+}
+
+.compact-menu {
+  width: 72px !important;
+  transition: width 0.18s ease;
+}
+.compact-menu:hover {
+  width: 220px !important;
+}
+.compact-menu:hover .app-brand-text,
+.compact-menu:hover .menu-inner .menu-item .menu-link .text-truncate {
+  display: inline-block;
+}
+
 @media (min-width: 768px) {
   html {
     font-size: 16px;
@@ -28,4 +47,87 @@ body {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
+}
+
+.layout-menu {
+  width: 220px;
+}
+.layout-menu .app-brand-text {
+  font-size: 0.95rem;
+}
+.layout-menu .menu-inner .menu-item .menu-link {
+  padding: 10px 16px;
+}
+.layout-menu .menu-item .menu-icon {
+  font-size: 1.15rem;
+}
+
+.bg-hero {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+.bg-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.03) 100%);
+  pointer-events: none;
+}
+
+.compact-menu {
+  width: 72px !important;
+}
+.compact-menu .app-brand-text {
+  display: none;
+}
+.compact-menu .menu-inner .menu-item .menu-link {
+  padding: 10px 12px;
+  justify-content: center;
+}
+.compact-menu .menu-inner .menu-item .menu-link .text-truncate {
+  display: none;
+}
+
+section[style*="background: url('/assets/img/backgrounds/1.jpg')"] {
+  background: linear-gradient(135deg,#eef2ff 0%, #ffffff 100%) !important;
+}
+
+.layout-page .content-wrapper .container-fluid {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+#auth {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+}
+.auth-logo {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.auth-logo img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.authentication-inner .card {
+  border-radius: 10px;
+}
+.authentication-inner .card .card-body h4 {
+  font-weight: 600;
+}
+
+a.font-bold {
+  font-weight: 600;
+}
+
+footer.content-footer {
+  margin-top: 24px;
 }
