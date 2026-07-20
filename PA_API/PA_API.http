@@ -1,0 +1,137 @@
+@PA_API_HostAddress = https://localhost:7047/api
+
+#######################################################################
+# ESPECIALIDADES
+#######################################################################
+
+###
+# Obtener lista de especialidades
+GET {{PA_API_HostAddress}}/especialidades
+Accept: application/json
+
+#######################################################################
+# PROFESIONALES
+#######################################################################
+
+###
+# Obtener lista de profesionales
+GET {{PA_API_HostAddress}}/profesionales
+Accept: application/json
+
+###
+# Buscar profesionales por nombre o descripción
+GET {{PA_API_HostAddress}}/profesionales?texto=Fernando
+Accept: application/json
+
+###
+# Buscar profesionales por descripción
+GET {{PA_API_HostAddress}}/profesionales?texto=Pediatra
+Accept: application/json
+
+###
+# Buscar profesionales por especialidad
+GET {{PA_API_HostAddress}}/profesionales?especialidadId=1
+Accept: application/json
+
+###
+# Obtener profesional por Id
+GET {{PA_API_HostAddress}}/profesionales/1
+Accept: application/json
+
+#######################################################################
+# CITAS MÉDICAS
+#######################################################################
+
+###
+# Obtener cita por Id
+GET {{PA_API_HostAddress}}/citas/1
+Accept: application/json
+
+###
+# Obtener citas
+GET {{PA_API_HostAddress}}/citas
+Accept: application/json
+
+###
+# Obtener citas por usuario
+GET {{PA_API_HostAddress}}/citas?usuarioId=1
+Accept: application/json
+
+###
+# Crear cita médica
+POST {{PA_API_HostAddress}}/citas/usuario
+Accept: application/json
+Content-Type: application/json
+
+{
+  "usuarioId": 1,
+  "profesionalMedicoId": 3,
+  "fechaHoraInicio": "2026-07-20T09:30:00",
+  "nombrePaciente": "Marcela Pozo",
+  "identificacionPaciente": "123456789",
+  "fechaNacimientoPaciente": "1996-05-15",
+  "correoPaciente": "marcela.pozo@example.com",
+  "telefonoPaciente": "88888888",
+  "motivo": "Consulta médica general"
+}
+
+#######################################################################
+# USUARIOS
+#######################################################################
+
+###
+# Obtener todos los usuarios
+GET {{PA_API_HostAddress}}/usuarios
+Accept: application/json
+
+###
+# Obtener usuarios activos
+GET {{PA_API_HostAddress}}/usuarios?activo=true
+Accept: application/json
+
+###
+# Obtener usuarios inactivos
+GET {{PA_API_HostAddress}}/usuarios?activo=false
+Accept: application/json
+
+###
+# Obtener usuario por Id
+GET {{PA_API_HostAddress}}/usuarios/1
+Accept: application/json
+
+###
+# Registrar usuario
+POST {{PA_API_HostAddress}}/usuarios/Registrar
+Accept: application/json
+Content-Type: application/json
+
+{
+  "identificacion": "118450781",
+  "nombreCompleto": "María Fernanda Rodríguez",
+  "correoElectronico": "maria.rodriguez@example.com",
+  "telefono": "88881234",
+  "fechaNacimiento": "1995-08-15T00:00:00",
+  "contrasenna": "Password123!",
+  "confirmarContrasenna": "Password123!"
+}
+
+###
+# Iniciar sesión
+POST {{PA_API_HostAddress}}/usuarios/IniciarSesion
+Accept: application/json
+Content-Type: application/json
+
+{
+  "correoElectronico": "maria.alvarado@correo.test",
+  "contrasenna": "Temporal123!"
+}
+
+###
+# Recuperar acceso
+POST {{PA_API_HostAddress}}/usuarios/RecuperarAcceso
+Accept: application/json
+Content-Type: application/json
+
+{
+  "correoElectronico": "maria.alvarado@correo.test"
+}

@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="PA_API/PA_API.csproj" Id="35c0e59b-c3c4-4df4-b54c-3dd244ee74db" />
   <Project Path="PA_WEB/PA_WEB.csproj" />
 </Solution>
