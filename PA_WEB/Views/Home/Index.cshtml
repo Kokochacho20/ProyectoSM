@@ -13,7 +13,9 @@
                 <div class="card-body">
 
                     <h4 class="mb-1">Iniciar Sesión</h4>
-                    <p class="mb-6 text-muted">Ingrese sus datos para acceder al sistema de citas médicas.</p>
+                    <p class="mb-6 text-muted">
+                        Ingrese sus datos para acceder al sistema de citas médicas.
+                    </p>
 
                     @if (TempData["MensajeRegistro"] != null)
                     {
@@ -22,36 +24,78 @@
                         </div>
                     }
 
+                    @if (TempData["MensajeRecuperar"] != null)
+                    {
+                        <div class="alert alert-success" role="alert">
+                            @TempData["MensajeRecuperar"]
+                        </div>
+                    }
+
+                    @if (TempData["Mensaje"] != null)
+                    {
+                        <div class="alert alert-info" role="alert">
+                            @TempData["Mensaje"]
+                        </div>
+                    }
+
+                    @if (ViewBag.Mensaje != null)
+                    {
+                        <div class="alert alert-danger" role="alert">
+                            @ViewBag.Mensaje
+                        </div>
+                    }
+
                     <form asp-action="IniciarSesion" asp-controller="Home" method="post">
 
                         <div class="mb-3">
                             <label asp-for="CorreoElectronico" class="form-label">Correo Electrónico</label>
+
                             <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bx bx-envelope"></i></span>
-                                <input type="text" class="form-control" asp-for="CorreoElectronico" placeholder="correo@ejemplo.com" autofocus />
+                                <span class="input-group-text bg-white">
+                                    <i class="bx bx-envelope"></i>
+                                </span>
+
+                                <input type="text"
+                                       class="form-control"
+                                       asp-for="CorreoElectronico"
+                                       placeholder="correo@ejemplo.com"
+                                       autofocus />
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label" asp-for="Contrasenna">Contraseña</label>
+                            <label asp-for="Contrasenna" class="form-label">Contraseña</label>
+
                             <div class="input-group">
-                                <span class="input-group-text bg-white"><i class="bx bx-lock"></i></span>
-                                <input type="password" class="form-control" asp-for="Contrasenna" placeholder="Ingrese su contraseña" />
+                                <span class="input-group-text bg-white">
+                                    <i class="bx bx-lock"></i>
+                                </span>
+
+                                <input type="password"
+                                       class="form-control"
+                                       asp-for="Contrasenna"
+                                       placeholder="Ingrese su contraseña" />
                             </div>
                         </div>
 
-                        <div class="mb-4 d-flex justify-content-between align-items-center">
-                            <a class="font-bold small" asp-action="RecuperarAcceso" asp-controller="Home">¿Olvidó su contraseña?</a>
-                            <div class="small text-muted">¿No tiene cuenta? <a asp-action="RegistrarUsuario" asp-controller="Home">Regístrese</a></div>
+                        <div class="mb-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <a class="font-bold small" asp-action="RecuperarAcceso" asp-controller="Home">
+                                ¿Olvidó su contraseña?
+                            </a>
+
+                            <div class="small text-muted">
+                                ¿No tiene cuenta?
+                                <a asp-action="RegistrarUsuario" asp-controller="Home">Regístrese</a>
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <button class="btn btn-primary d-grid w-100" type="submit">Acceder</button>
+                            <button class="btn btn-primary d-grid w-100" type="submit">
+                                Acceder
+                            </button>
                         </div>
 
                     </form>
-
-
 
                 </div>
             </div>
