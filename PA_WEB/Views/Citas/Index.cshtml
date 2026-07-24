@@ -1,0 +1,63 @@
+﻿@model List<PA_WEB.Models.CitaModel>
+
+<section class="py-5">
+    <div class="container">
+        <h3 class="mb-4">Mis citas</h3>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info">@TempData["Mensaje"]</div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-secondary">Aún no tiene citas registradas.</div>
+        }
+        else
+        {
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Profesional</th>
+                        <th>Fecha y hora</th>
+                        <th>Estado</th>
+                        <th>Motivo</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var cita in Model)
+                    {
+                        <tr>
+                            <td>@cita.ProfesionalMedico</td>
+                            <td>@cita.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge bg-@(cita.EstadoCita switch
+                                      {
+                                          PA_WEB.Models.EstadoCitaModel.Pendiente => "warning",
+                                          PA_WEB.Models.EstadoCitaModel.Confirmada => "success",
+                                          PA_WEB.Models.EstadoCitaModel.Cancelada => "secondary",
+                                          _ => "dark"
+                                      })">@cita.EstadoCita</span>
+                            </td>
+                            <td>@cita.Motivo</td>
+                            <td class="text-end">
+                                @if (cita.EstadoCita == PA_WEB.Models.EstadoCitaModel.Pendiente ||
+                                     cita.EstadoCita == PA_WEB.Models.EstadoCitaModel.Confirmada)
+                                {
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Modificar" asp-route-citaId="@cita.Id">Modificar</a>
+                                    <form method="post" asp-action="Cancelar" asp-route-citaId="@cita.Id" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                onclick="return confirm('¿Seguro que desea cancelar esta cita?');">
+                                            Cancelar
+                                        </button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</section>

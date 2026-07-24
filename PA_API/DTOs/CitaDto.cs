@@ -36,4 +36,18 @@ namespace PA_API.DTOs
         public string IdentificacionPaciente { get; set; } = string.Empty;
         public string Motivo { get; set; } = string.Empty;
     }
+
+    public class ModificarCitaRequestDto
+    {
+        [Required]
+        public int UsuarioId { get; set; }
+        [Required]
+        public DateTime FechaHoraInicio { get; set; }
+    }
+
+    public class CancelarCitaRequestDto
+    {
+        [Required]
+        public int UsuarioId { get; set; }
+    }
 }

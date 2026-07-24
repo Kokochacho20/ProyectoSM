@@ -1,0 +1,40 @@
+﻿@model List<PA_WEB.Models.ProfesionalModel>
+
+<section class="py-5 bg-hero">
+    <div class="container py-5">
+        <h3 class="mb-4">Profesionales disponibles</h3>
+
+        @if (!Model.Any())
+        {
+            <div class="alert alert-info">No hay profesionales disponibles para esta especialidad.</div>
+        }
+
+        <div class="row g-3">
+            @foreach (var profesional in Model)
+            {
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100" style="border-radius:12px;">
+                        <div class="card-body">
+                            <h5 class="card-title mb-1">@profesional.NombreCompleto</h5>
+                            <p class="text-muted small mb-2">@profesional.Especialidades</p>
+                            @if (!string.IsNullOrWhiteSpace(profesional.Descripcion))
+                            {
+                                <p class="small">@profesional.Descripcion</p>
+                            }
+                            <p class="mb-1"><i class="bx bx-dollar-circle"></i> Consulta: @profesional.PrecioConsulta.ToString("C")</p>
+                            <p class="mb-3"><i class="bx bx-phone"></i> @profesional.Telefono</p>
+                            <a class="btn btn-primary w-100"
+                               asp-controller="Citas" asp-action="Crear"
+                               asp-route-profesionalId="@profesional.Id"
+                               asp-route-profesionalNombre="@profesional.NombreCompleto">
+                                Agendar con este profesional
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <a asp-controller="Home" asp-action="Inicio" class="btn btn-link mt-3">&larr; Elegir otra especialidad</a>
+    </div>
+</section>

@@ -1,0 +1,38 @@
+﻿@model PA_WEB.Models.ModificarCitaModel
+
+<section class="py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-clinic text-white">
+                        <h5 class="mb-0">Modificar cita con @ViewBag.ProfesionalMedico</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (ViewBag.Mensaje != null)
+                        {
+                            <div class="alert alert-danger">@ViewBag.Mensaje</div>
+                        }
+                        <form method="post" class="row g-3">
+                            <input type="hidden" asp-for="CitaId" />
+                            <div class="col-md-6">
+                                <label class="form-label">Nueva fecha</label>
+                                <input asp-for="Fecha" type="date" class="form-control" />
+                                <span asp-validation-for="Fecha" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Nueva hora</label>
+                                <input asp-for="Hora" type="time" class="form-control" />
+                                <span asp-validation-for="Hora" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 d-flex justify-content-between">
+                                <a asp-action="Index" class="btn btn-link">&larr; Cancelar y volver</a>
+                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

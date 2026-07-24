@@ -12,6 +12,8 @@ namespace PA_API.Services
         Task<ResultDto<CitaResponseDto>> CrearAsync(CrearCitaRequestDto request);
         Task<ResultDto<CitaResponseDto>> ObtenerCitaPorIdAsync(int citaId);
         Task<ResultDto<List<CitaResponseDto>>> ObtenerCitasAsync(int? usuarioId);
+        Task<ResultDto<CitaResponseDto>> ModificarAsync(int citaId, ModificarCitaRequestDto request);
+        Task<ResultDto> CancelarAsync(int citaId, int usuarioId);
     }
 
     public class CitaMedicaService(IConfiguration configuration, ILogger<CitaMedicaService> logger) : ICitaMedicaService
@@ -103,6 +105,65 @@ namespace PA_API.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error al intentar obtener citas para el usuarioId: {usuarioId}", usuarioId);
+                throw;
+            }
+        }
+
+        public async Task<ResultDto<CitaResponseDto>> ModificarAsync(int citaId, ModificarCitaRequestDto request)
+        {
+            try
+            {
+                using IDbConnection conexion = new SqlConnection(_connectionString);
+
+                var parametros = new
+                {
+                    Id = citaId,
+                    request.UsuarioId,
+                    request.FechaHoraInicio,
+                    FechaHoraFin = request.FechaHoraInicio.AddHours(1)
+                };
+
+                var cita = await conexion.QuerySingleOrDefaultAsync<CitaResponseDto>(
+                    StoreProceduresConstants.sp_modificar_cita,
+                    parametros,
+                    commandType: CommandType.StoredProcedure);
+
+                if (cita is null)
+                    return ResultDto<CitaResponseDto>.Fail(StatusCodes.Status400BadRequest, "No se pudo modificar la cita.");
+
+                return ResultDto<CitaResponseDto>.Ok(cita, message: "Cita modificada correctamente.");
+            }
+            catch (SqlException ex)
+            {
+                return ResultDto<CitaResponseDto>.Fail(StatusCodes.Status400BadRequest, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error al modificar la cita con id: {citaId}", citaId);
+                throw;
+            }
+        }
+
+        public async Task<ResultDto> CancelarAsync(int citaId, int usuarioId)
+        {
+            try
+            {
+                using IDbConnection conexion = new SqlConnection(_connectionString);
+
+                var filasAfectadas = await conexion.ExecuteAsync(
+                    StoreProceduresConstants.sp_cancelar_cita,
+                    new { Id = citaId, UsuarioId = usuarioId },
+                    commandType: CommandType.StoredProcedure);
+
+                if (filasAfectadas == 0)
+                    return ResultDto.Fail(StatusCodes.Status400BadRequest,
+                        "No se pudo cancelar la cita. Verifique que exista, le pertenezca y no esté ya cancelada o finalizada.");
+
+                return ResultDto.Ok(message: "Cita cancelada correctamente.");
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error al cancelar la cita con id: {citaId}", citaId);
                 throw;
             }
         }

@@ -18,7 +18,7 @@ namespace PA_API.Services
 
     public class UsuarioService(
         ILogger<UsuarioService> logger,
-        IConfiguration configuration, 
+        IConfiguration configuration,
         IEmailService emailService) : IUsuarioService
     {
         private readonly string _connectionString = configuration.GetConnectionString(ConnectionStringConstants.MainDatabase)
@@ -33,10 +33,10 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
                 var usuarios = await conexion.QueryAsync<UsuarioDto>(
                     StoreProceduresConstants.sp_usuarios_lista,
-                    new { Activo = activo},
+                    new { Activo = activo },
                     commandType: CommandType.StoredProcedure);
 
-                    return ResultDto<List<UsuarioDto>>.Ok(usuarios.ToList());
+                return ResultDto<List<UsuarioDto>>.Ok(usuarios.ToList());
             }
             catch (Exception ex)
             {
@@ -171,10 +171,10 @@ namespace PA_API.Services
 
                 return ResultDto<UsuarioDto>.Ok(usuario, StatusCodes.Status201Created);
             }
-            catch(SqlException ex)
+            catch (SqlException ex)
             {
                 logger.LogError(ex, "Error SQL al registrar usuario {Correo}", request.CorreoElectronico);
-                return ResultDto<UsuarioDto>.Fail(StatusCodes.Status409Conflict, 
+                return ResultDto<UsuarioDto>.Fail(StatusCodes.Status409Conflict,
                     "Identificacion o Correo electronico ya registrados.");
             }
             catch (Exception ex)
@@ -214,7 +214,7 @@ namespace PA_API.Services
                     return ResultDto.Ok(message: "Si el correo existe, recibirá un correo con instrucciones.");
                 }
 
-                return ResultDto.Fail(StatusCodes.Status400BadRequest, 
+                return ResultDto.Fail(StatusCodes.Status400BadRequest,
                     "No se ha recuperado su acceso, por favor intente nuevamente");
             }
             catch (Exception ex)
@@ -248,7 +248,7 @@ namespace PA_API.Services
                 if (result > 0)
                     return ResultDto.Ok(message: "Contraseña actualizada exitosamente.");
 
-                return ResultDto.Fail(StatusCodes.Status400BadRequest, 
+                return ResultDto.Fail(StatusCodes.Status400BadRequest,
                     "La contraseña no se pudo actualizar correctamente.  Intentar nuevamente.");
 
             }

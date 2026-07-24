@@ -14,5 +14,7 @@
         public const string sp_usuario_iniciar_sesion = "sp_usuario_iniciar_sesion";
         public const string sp_usuario_registrar = "sp_usuario_registrar";
         public const string sp_actualizar_contrasena = "sp_actualizar_contrasena";
+        public const string sp_modificar_cita = "sp_modificar_cita";
+        public const string sp_cancelar_cita = "sp_cancelar_cita";
     }
 }

@@ -36,5 +36,25 @@ namespace PA_API.Controllers
             var result = await citaMedicaService.ObtenerCitaPorIdAsync(citaId);
             return StatusCode(result.StatusCode, result);
         }
+
+        [HttpPut("{citaId}")]
+        [ProducesResponseType(typeof(ResultDto<CitaResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ModificarCitaAsync(int citaId, [FromBody] ModificarCitaRequestDto request)
+        {
+            var result = await citaMedicaService.ModificarAsync(citaId, request);
+            return StatusCode(result.StatusCode, result);
+        }
+
+        [HttpPut("{citaId}/cancelar")]
+        [ProducesResponseType(typeof(ResultDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ResultDto), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> CancelarCitaAsync(int citaId, [FromBody] CancelarCitaRequestDto request)
+        {
+            var result = await citaMedicaService.CancelarAsync(citaId, request.UsuarioId);
+            return StatusCode(result.StatusCode, result);
+        }
     }
 }

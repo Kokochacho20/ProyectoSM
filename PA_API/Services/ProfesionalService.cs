@@ -57,7 +57,7 @@ namespace PA_API.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Hubo un error al buscar el profesional con Id={profesionalId}",profesionalId);
+                logger.LogError(ex, "Hubo un error al buscar el profesional con Id={profesionalId}", profesionalId);
                 throw;
             }
         }

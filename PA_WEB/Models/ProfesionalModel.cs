@@ -1,18 +1,6 @@
-﻿namespace PA_API.DTOs
+﻿namespace PA_WEB.Models
 {
-    public class EspecialidadDto
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = string.Empty;
-    }
-
-    public class BuscarProfesionalesQueryDto
-    {
-        public string? Texto { get; set; }
-        public int? EspecialidadId { get; set; }
-    }
-
-    public class ProfesionalMedicoDto
+    public class ProfesionalModel
     {
         public int Id { get; set; }
         public string NombreCompleto { get; set; } = string.Empty;

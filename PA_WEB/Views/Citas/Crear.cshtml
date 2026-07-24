@@ -1,0 +1,92 @@
+﻿@model PA_WEB.Models.CrearCitaModel
+
+<section class="py-5 bg-hero">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg" style="border-radius:14px;">
+                    <div class="card-header bg-clinic p-4 text-white">
+                        <h4 class="mb-0">Agendar con @Model.ProfesionalMedicoNombre</h4>
+                    </div>
+                    <div class="card-body p-4">
+                        @if (ViewBag.Mensaje != null)
+                        {
+                            <div class="alert alert-danger">@ViewBag.Mensaje</div>
+                        }
+                        <form method="post" class="row g-3">
+                            <input type="hidden" asp-for="ProfesionalMedicoId" />
+                            <input type="hidden" asp-for="ProfesionalMedicoNombre" />
+
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha</label>
+                                <input asp-for="Fecha" type="date" class="form-control" />
+                                <span asp-validation-for="Fecha" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Hora</label>
+                                <input asp-for="Hora" type="time" class="form-control" />
+                                <span asp-validation-for="Hora" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="EsParaOtraPersona" id="esParaOtraPersona">
+                                    <label class="form-check-label" for="esParaOtraPersona">
+                                        Es para otra persona
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre del paciente</label>
+                                <input asp-for="NombrePaciente" class="form-control" />
+                                <span asp-validation-for="NombrePaciente" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Identificación</label>
+                                <input asp-for="IdentificacionPaciente" class="form-control" />
+                                <span asp-validation-for="IdentificacionPaciente" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Fecha de nacimiento</label>
+                                <input asp-for="FechaNacimientoPaciente" type="date" class="form-control" />
+                                <span asp-validation-for="FechaNacimientoPaciente" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Correo</label>
+                                <input asp-for="CorreoPaciente" type="email" class="form-control" />
+                                <span asp-validation-for="CorreoPaciente" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono</label>
+                                <input asp-for="TelefonoPaciente" class="form-control" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Motivo / notas</label>
+                                <textarea asp-for="Motivo" class="form-control" rows="3"></textarea>
+                            </div>
+
+                            <div class="col-12 d-flex justify-content-between">
+                                <a asp-action="Profesionales" asp-route-especialidadId="0" class="btn btn-link">&larr; Volver</a>
+                                <button type="submit" class="btn btn-primary btn-lg">Solicitar cita</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    document.getElementById('esParaOtraPersona').addEventListener('change', function() {
+        var campos = ['NombrePaciente', 'IdentificacionPaciente', 'FechaNacimientoPaciente', 'CorreoPaciente', 'TelefonoPaciente'];
+        campos.forEach(function(id) {
+            var campo = document.getElementById(id);
+            if (campo) {
+                campo.value = this.checked ? '' : campo.defaultValue;
+            }
+        }.bind(this));
+    });
+</script>

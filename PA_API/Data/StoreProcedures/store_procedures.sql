@@ -379,6 +379,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
+    SET DATEFIRST 1; -- 1 = Lunes ... 7 = Domingo (igual que el enum DiaSemana)
 
     BEGIN TRY
 
@@ -388,6 +389,31 @@ BEGIN
             WHERE Id = @UsuarioId
         )
             THROW 50001, 'Usuario invalido.', 1;
+
+        DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
+        DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);
+        DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM HorarioProfesional
+            WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+              AND DiaSemana = @DiaSemana
+              AND Estado = 1
+              AND HoraInicio <= @HoraInicioSolicitada
+              AND HoraFin >= @HoraFinSolicitada
+        )
+            THROW 50003, 'El profesional no atiende en ese día/horario.', 1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM CitaMedica
+            WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+              AND EstadoCita IN (1, 2)
+              AND FechaHoraInicio < @FechaHoraFin
+              AND FechaHoraFin > @FechaHoraInicio
+        )
+            THROW 50004, 'Ya existe una cita activa para ese profesional en ese horario.', 1;
 
     INSERT INTO CitaMedica
     (
@@ -452,7 +478,6 @@ BEGIN
 END
 GO
 
-
 ----------------------------------------------------------
 -- Actualizar contrasenna
 ----------------------------------------------------------
@@ -473,4 +498,115 @@ BEGIN
         Id = @Id
         AND Estado = 1;
 END;
+GO
+
+----------------------------------------------------------
+-- Modificar cita (fecha/hora), validando disponibilidad
+----------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE sp_modificar_cita
+(
+    @Id INT,
+    @UsuarioId INT,
+    @FechaHoraInicio DATETIME2,
+    @FechaHoraFin DATETIME2
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+    SET DATEFIRST 1;
+
+    BEGIN TRY
+
+        DECLARE @ProfesionalMedicoId INT;
+
+        SELECT @ProfesionalMedicoId = ProfesionalMedicoId
+        FROM CitaMedica
+        WHERE Id = @Id
+          AND UsuarioId = @UsuarioId
+          AND EstadoCita IN (1, 2);
+
+        IF @ProfesionalMedicoId IS NULL
+            THROW 50005, 'Cita no encontrada, no le pertenece, o ya no se puede modificar.', 1;
+
+        DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
+        DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);
+        DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
+
+        IF NOT EXISTS (
+            SELECT 1
+            FROM HorarioProfesional
+            WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+              AND DiaSemana = @DiaSemana
+              AND Estado = 1
+              AND HoraInicio <= @HoraInicioSolicitada
+              AND HoraFin >= @HoraFinSolicitada
+        )
+            THROW 50003, 'El profesional no atiende en ese día/horario.', 1;
+
+        IF EXISTS (
+            SELECT 1
+            FROM CitaMedica
+            WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+              AND EstadoCita IN (1, 2)
+              AND Id <> @Id
+              AND FechaHoraInicio < @FechaHoraFin
+              AND FechaHoraFin > @FechaHoraInicio
+        )
+            THROW 50004, 'Ya existe una cita activa para ese profesional en ese horario.', 1;
+
+        UPDATE CitaMedica
+        SET FechaHoraInicio = @FechaHoraInicio,
+            FechaHoraFin = @FechaHoraFin
+        WHERE Id = @Id;
+
+        SELECT
+            c.Id,
+            c.UsuarioId,
+            c.ProfesionalMedicoId,
+            pm.NombreCompleto AS ProfesionalMedico,
+            pm.CorreoElectronico AS CorreoProfesional,
+            pm.Telefono AS TelefonoProfesional,
+            c.FechaHoraInicio,
+            c.FechaHoraFin,
+            c.NombrePaciente,
+            c.IdentificacionPaciente,
+            c.CorreoPaciente,
+            c.TelefonoPaciente,
+            c.Motivo,
+            c.EstadoCita,
+            c.FechaCreacion
+        FROM CitaMedica c
+            INNER JOIN ProfesionalMedico pm
+                ON pm.Id = c.ProfesionalMedicoId
+        WHERE c.Id = @Id;
+
+    END TRY
+    BEGIN CATCH
+        THROW;
+    END CATCH
+END
+GO
+
+
+----------------------------------------------------------
+-- Cancelar cita
+----------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE sp_cancelar_cita
+(
+    @Id INT,
+    @UsuarioId INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE CitaMedica
+    SET EstadoCita = 3
+    WHERE Id = @Id
+      AND UsuarioId = @UsuarioId
+      AND EstadoCita IN (1, 2);
+END
 GO
