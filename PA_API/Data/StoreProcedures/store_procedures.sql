@@ -390,6 +390,13 @@ BEGIN
         )
             THROW 50001, 'Usuario invalido.', 1;
 
+        -- Validación al menos 24 horas y máximo 60 días
+        IF @FechaHoraInicio < DATEADD(HOUR, 24, GETDATE())
+            THROW 50006, 'La fecha/hora de inicio debe ser al menos 24 horas en el futuro.', 1;
+
+        IF @FechaHoraInicio > DATEADD(DAY, 60, GETDATE())
+            THROW 50007, 'La fecha/hora de inicio no puede ser mayor a 60 días desde ahora.', 1;
+
         DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
         DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);
         DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
@@ -529,6 +536,13 @@ BEGIN
 
         IF @ProfesionalMedicoId IS NULL
             THROW 50005, 'Cita no encontrada, no le pertenece, o ya no se puede modificar.', 1;
+
+        -- Validación de antelación: al menos 24 horas y máximo 60 días desde ahora
+        IF @FechaHoraInicio < DATEADD(HOUR, 24, GETDATE())
+            THROW 50006, 'La fecha/hora de inicio debe ser al menos 24 horas en el futuro.', 1;
+
+        IF @FechaHoraInicio > DATEADD(DAY, 60, GETDATE())
+            THROW 50007, 'La fecha/hora de inicio no puede ser mayor a 60 días desde ahora.', 1;
 
         DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
         DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);

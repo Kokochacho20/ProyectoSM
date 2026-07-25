@@ -17,7 +17,10 @@
                             <input type="hidden" asp-for="CitaId" />
                             <div class="col-md-6">
                                 <label class="form-label">Nueva fecha</label>
-                                <input asp-for="Fecha" type="date" class="form-control" />
+                                <input asp-for="Fecha" type="date" class="form-control"
+                                       min="@DateTime.Now.AddHours(24).ToString("yyyy-MM-dd")"
+                                       max="@DateTime.Now.AddDays(60).ToString("yyyy-MM-dd")" />
+                                <div class="form-text text-muted small">Las citas deben solicitarse con al menos 24 horas de antelación y hasta 60 días.</div>
                                 <span asp-validation-for="Fecha" class="text-danger small"></span>
                             </div>
                             <div class="col-md-6">

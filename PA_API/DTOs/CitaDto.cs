@@ -1,5 +1,6 @@
 ﻿using PA_API.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PA_API.DTOs
 {
@@ -49,5 +50,38 @@ namespace PA_API.DTOs
     {
         [Required]
         public int UsuarioId { get; set; }
+    }
+
+    public class CitaDto
+    {
+        [JsonPropertyName("usuarioId")]
+        public int UsuarioId { get; set; }
+
+        [JsonPropertyName("profesionalMedicoId")]
+        public int ProfesionalMedicoId { get; set; }
+
+        [JsonPropertyName("fechaHoraInicio")]
+        public DateTime FechaHoraInicio { get; set; }
+
+        [JsonPropertyName("esParaOtraPersona")]
+        public bool EsParaOtraPersona { get; set; }
+
+        [JsonPropertyName("nombrePaciente")]
+        public string? NombrePaciente { get; set; }
+
+        [JsonPropertyName("identificacionPaciente")]
+        public string? IdentificacionPaciente { get; set; }
+
+        [JsonPropertyName("fechaNacimientoPaciente")]
+        public DateTime? FechaNacimientoPaciente { get; set; }
+
+        [JsonPropertyName("correoPaciente")]
+        public string? CorreoPaciente { get; set; }
+
+        [JsonPropertyName("telefonoPaciente")]
+        public string? TelefonoPaciente { get; set; }
+
+        [JsonPropertyName("motivo")]
+        public string? Motivo { get; set; }
     }
 }

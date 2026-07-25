@@ -1,12 +1,51 @@
 ﻿@model List<PA_WEB.Models.ProfesionalModel>
 
+@{
+    var textoQ = (string?)ViewContext.HttpContext.Request.Query["texto"] ?? string.Empty;
+    var especialidadQ = (string?)ViewContext.HttpContext.Request.Query["especialidadId"] ?? string.Empty;
+    var especialidades = ViewBag.Especialidades as List<PA_WEB.Models.EspecialidadModel> ?? new List<PA_WEB.Models.EspecialidadModel>();
+}
+
 <section class="py-5 bg-hero">
     <div class="container py-5">
         <h3 class="mb-4">Profesionales disponibles</h3>
 
+        <form method="get" asp-action="Profesionales" class="row g-2 mb-4">
+            <div class="col-md-6">
+                <input name="texto" type="text" class="form-control" placeholder="Buscar por nombre, descripción o código" value="@textoQ" />
+            </div>
+            <div class="col-md-4">
+                <select name="especialidadId" class="form-select">
+                    @if (string.IsNullOrEmpty(especialidadQ))
+                    {
+                        <option value="" selected>Todas las especialidades</option>
+                    }
+                    else
+                    {
+                        <option value="">Todas las especialidades</option>
+                    }
+
+                    @foreach (var esp in especialidades)
+                    {
+                        if (especialidadQ == esp.Id.ToString())
+                        {
+                            <option value="@esp.Id" selected>@esp.Nombre</option>
+                        }
+                        else
+                        {
+                            <option value="@esp.Id">@esp.Nombre</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Buscar</button>
+            </div>
+        </form>
+
         @if (!Model.Any())
         {
-            <div class="alert alert-info">No hay profesionales disponibles para esta especialidad.</div>
+            <div class="alert alert-info">No hay profesionales disponibles para esta búsqueda.</div>
         }
 
         <div class="row g-3">

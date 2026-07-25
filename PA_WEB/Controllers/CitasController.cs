@@ -11,10 +11,21 @@ namespace PA_WEB.Controllers
         private string UrlApi => configuration["Valores:UrlApi"]!;
 
         [HttpGet]
-        public async Task<IActionResult> Profesionales(int especialidadId)
+        public async Task<IActionResult> Profesionales(int? especialidadId, string? texto)
         {
             using var client = CrearCliente();
-            var response = await client.GetAsync($"{UrlApi}profesionales?especialidadId={especialidadId}");
+
+            // Construir query string solo con parámetros presentes
+            var url = $"{UrlApi}profesionales";
+            var query = new List<string>();
+            if (especialidadId.HasValue && especialidadId.Value != 0)
+                query.Add($"especialidadId={especialidadId.Value}");
+            if (!string.IsNullOrWhiteSpace(texto))
+                query.Add($"texto={Uri.EscapeDataString(texto)}");
+            if (query.Any())
+                url += "?" + string.Join("&", query);
+
+            var response = await client.GetAsync(url);
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel<List<ProfesionalModel>>>();
 
             if (!response.IsSuccessStatusCode || resultado?.Data is null)
@@ -22,6 +33,26 @@ namespace PA_WEB.Controllers
                 TempData["Mensaje"] = resultado?.Message ?? "No se pudieron cargar los profesionales.";
                 return RedirectToAction("Inicio", "Home");
             }
+
+            // Obtener la lista de especialidades para el combo (Todas las especialidades)
+            var respEsps = await client.GetAsync($"{UrlApi}especialidades");
+            List<EspecialidadModel>? especialidades = null;
+            if (respEsps.IsSuccessStatusCode)
+            {
+                // Many APIs return a plain array for this endpoint. Try to read as List<T> first
+                // and fall back to the wrapped ResultModel<T> shape if necessary.
+                try
+                {
+                    especialidades = await respEsps.Content.ReadFromJsonAsync<List<EspecialidadModel>>();
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                    var resultadoEsps = await respEsps.Content.ReadFromJsonAsync<ResultModel<List<EspecialidadModel>>>();
+                    especialidades = resultadoEsps?.Data;
+                }
+            }
+
+            ViewBag.Especialidades = especialidades ?? new List<EspecialidadModel>();
 
             return View(resultado.Data);
         }
@@ -52,31 +83,49 @@ namespace PA_WEB.Controllers
 
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
+            // Validate and compose FechaHoraInicio explicitly to avoid culture/format issues
+            // model.Fecha is DateTime with date component, model.Hora is TimeSpan
+            var fecha = model.Fecha.Date;
+            var hora = model.Hora;
+            var fechaHoraInicio = fecha + hora; // DateTime + TimeSpan
+
             var request = new
             {
-                UsuarioId = usuarioId,
-                model.ProfesionalMedicoId,
-                FechaHoraInicio = model.Fecha.Date + model.Hora,
-                model.EsParaOtraPersona,
-                model.NombrePaciente,
-                model.IdentificacionPaciente,
-                model.FechaNacimientoPaciente,
-                model.CorreoPaciente,
-                model.TelefonoPaciente,
-                model.Motivo
+                usuarioId = usuarioId,
+                profesionalMedicoId = model.ProfesionalMedicoId,
+                fechaHoraInicio = fechaHoraInicio,
+                esParaOtraPersona = model.EsParaOtraPersona,
+                nombrePaciente = model.NombrePaciente,
+                identificacionPaciente = model.IdentificacionPaciente,
+                fechaNacimientoPaciente = model.FechaNacimientoPaciente,
+                correoPaciente = model.CorreoPaciente,
+                telefonoPaciente = model.TelefonoPaciente,
+                motivo = model.Motivo
             };
 
             using var client = CrearCliente();
+
             var response = await client.PostAsJsonAsync($"{UrlApi}citas/usuario", request);
-            var resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
+
+            var responseBody = await response.Content.ReadAsStringAsync();
+
+            ResultModel<CitaModel>? resultado = null;
+            try
+            {
+                resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                // ignore deserialization failure; we'll use raw responseBody for messages
+            }
 
             if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Mensaje = resultado?.Message ?? "No se pudo registrar la cita.";
+                ViewBag.Mensaje = resultado?.Message ?? responseBody ?? "No se pudo registrar la cita.";
                 return View(model);
             }
 
-            TempData["Mensaje"] = "Cita registrada correctamente.";
+            TempData["Mensaje"] = resultado?.Message ?? "Cita registrada correctamente.";
             return RedirectToAction("Index");
         }
 
@@ -135,8 +184,9 @@ namespace PA_WEB.Controllers
 
             if (!response.IsSuccessStatusCode)
             {
+                var responseBody = await response.Content.ReadAsStringAsync();
                 var resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
-                ViewBag.Mensaje = resultado?.Message ?? "No se pudo modificar la cita.";
+                ViewBag.Mensaje = resultado?.Message ?? responseBody ?? "No se pudo modificar la cita.";
                 return View(model);
             }
 
@@ -157,6 +207,12 @@ namespace PA_WEB.Controllers
 
             var response = await client.SendAsync(httpRequest);
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel>();
+
+            if (resultado is null || string.IsNullOrWhiteSpace(resultado.Message))
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                // no logging, keep silent in production
+            }
 
             TempData["Mensaje"] = resultado?.Message
                 ?? (response.IsSuccessStatusCode ? "Cita cancelada." : "No se pudo cancelar la cita.");
