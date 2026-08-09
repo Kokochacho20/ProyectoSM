@@ -34,7 +34,10 @@ namespace PA_API.Services
 
                 var usuarios = await conexion.QueryAsync<UsuarioDto>(
                     StoreProceduresConstants.sp_usuarios_lista,
-                    new { Activo = activo },
+                    new
+                    {
+                        Activo = activo
+                    },
                     commandType: CommandType.StoredProcedure);
 
                 return ResultDto<List<UsuarioDto>>.Ok(usuarios.ToList());
@@ -93,7 +96,7 @@ namespace PA_API.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error al obtener usuario");
+                logger.LogError(ex, "Error al obtener usuario por correo electrónico");
                 throw;
             }
         }
@@ -116,7 +119,8 @@ namespace PA_API.Services
                         usuario.FechaExpiracionPasswordTemporal.Value < DateTime.UtcNow)
                     {
                         return ResultDto<InicioSesionResponseDto>
-                            .Fail(StatusCodes.Status401Unauthorized,
+                            .Fail(
+                                StatusCodes.Status401Unauthorized,
                                 "La contraseña temporal venció. Debe solicitar una nueva desde Recuperar acceso.");
                     }
                 }
@@ -233,15 +237,15 @@ namespace PA_API.Services
                 var fechaExpiracion = DateTime.UtcNow.AddMinutes(15);
 
                 var result = await conexion.QueryFirstOrDefaultAsync<int>(
-    StoreProceduresConstants.sp_actualizar_contrasena,
-    new
-    {
-        usuario.Id,
-        PasswordHash = nuevoHash,
-        TemporaryPassword = true,
-        FechaExpiracionPasswordTemporal = fechaExpiracion
-    },
-    commandType: CommandType.StoredProcedure);
+                    StoreProceduresConstants.sp_actualizar_contrasena,
+                    new
+                    {
+                        usuario.Id,
+                        PasswordHash = nuevoHash,
+                        TemporaryPassword = true,
+                        FechaExpiracionPasswordTemporal = fechaExpiracion
+                    },
+                    commandType: CommandType.StoredProcedure);
 
                 if (result == 1)
                 {
@@ -251,7 +255,8 @@ namespace PA_API.Services
                         passwordTemporal,
                         fechaExpiracion);
 
-                    return ResultDto.Ok(message: "Si el correo existe, recibirá un correo con instrucciones.");
+                    return ResultDto.Ok(
+                        message: "Si el correo existe, recibirá un correo con instrucciones.");
                 }
 
                 return ResultDto.Fail(
@@ -281,19 +286,20 @@ namespace PA_API.Services
                 var nuevoHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
 
                 var result = await conexion.QueryFirstOrDefaultAsync<int>(
-    StoreProceduresConstants.sp_actualizar_contrasena,
-    new
-    {
-        request.Id,
-        PasswordHash = nuevoHash,
-        TemporaryPassword = false,
-        FechaExpiracionPasswordTemporal = (DateTime?)null
-    },
-    commandType: CommandType.StoredProcedure);
+                    StoreProceduresConstants.sp_actualizar_contrasena,
+                    new
+                    {
+                        request.Id,
+                        PasswordHash = nuevoHash,
+                        TemporaryPassword = false,
+                        FechaExpiracionPasswordTemporal = (DateTime?)null
+                    },
+                    commandType: CommandType.StoredProcedure);
 
                 if (result == 1)
                 {
-                    return ResultDto.Ok(message: "Contraseña actualizada exitosamente.");
+                    return ResultDto.Ok(
+                        message: "Contraseña actualizada exitosamente.");
                 }
 
                 return ResultDto.Fail(

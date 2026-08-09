@@ -1,79 +1,144 @@
 ﻿@model List<PA_WEB.Models.ProfesionalModel>
 
 @{
-    var textoQ = (string?)ViewContext.HttpContext.Request.Query["texto"] ?? string.Empty;
-    var especialidadQ = (string?)ViewContext.HttpContext.Request.Query["especialidadId"] ?? string.Empty;
-    var especialidades = ViewBag.Especialidades as List<PA_WEB.Models.EspecialidadModel> ?? new List<PA_WEB.Models.EspecialidadModel>();
+    ViewData["Title"] = "Profesionales disponibles";
+
+    var texto = ViewBag.Texto as string;
+    var especialidadId = ViewBag.EspecialidadId as int?;
+    var especialidades = ViewBag.Especialidades as List<PA_WEB.Models.EspecialidadModel>
+        ?? new List<PA_WEB.Models.EspecialidadModel>();
 }
 
-<section class="py-5 bg-hero">
-    <div class="container py-5">
-        <h3 class="mb-4">Profesionales disponibles</h3>
+<section class="py-5">
+    <div class="container">
 
-        <form method="get" asp-action="Profesionales" class="row g-2 mb-4">
-            <div class="col-md-6">
-                <input name="texto" type="text" class="form-control" placeholder="Buscar por nombre, descripción o código" value="@textoQ" />
+        <div class="clinic-card-soft p-4 p-lg-5">
+
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+                <div>
+                    <span class="home-section-badge">
+                        <i class="bx bx-user-check"></i>
+                        Profesionales
+                    </span>
+
+                    <h3 class="clinic-title mb-1">Profesionales disponibles</h3>
+
+                    <p class="clinic-subtitle mb-0">
+                        Busque profesionales por nombre, descripción o especialidad.
+                    </p>
+                </div>
+
+                <a asp-controller="Home" asp-action="Inicio" class="btn btn-outline-secondary">
+                    &larr; Volver al inicio
+                </a>
             </div>
-            <div class="col-md-4">
-                <select name="especialidadId" class="form-select">
-                    @if (string.IsNullOrEmpty(especialidadQ))
-                    {
-                        <option value="" selected>Todas las especialidades</option>
-                    }
-                    else
-                    {
+
+            <form asp-controller="Citas" asp-action="Profesionales" method="get" class="row g-3 mb-4">
+
+                <div class="col-lg-5">
+                    <input type="text"
+                           name="texto"
+                           value="@texto"
+                           class="form-control"
+                           placeholder="Buscar por nombre o descripción" />
+                </div>
+
+                <div class="col-lg-5">
+                    <select name="especialidadId" class="form-select">
                         <option value="">Todas las especialidades</option>
-                    }
 
-                    @foreach (var esp in especialidades)
-                    {
-                        if (especialidadQ == esp.Id.ToString())
+                        @foreach (var especialidad in especialidades)
                         {
-                            <option value="@esp.Id" selected>@esp.Nombre</option>
-                        }
-                        else
-                        {
-                            <option value="@esp.Id">@esp.Nombre</option>
-                        }
-                    }
-                </select>
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-primary w-100">Buscar</button>
-            </div>
-        </form>
+                            var seleccionado = especialidadId.HasValue && especialidadId.Value == especialidad.Id;
 
-        @if (!Model.Any())
-        {
-            <div class="alert alert-info">No hay profesionales disponibles para esta búsqueda.</div>
-        }
+                            <option value="@especialidad.Id" selected="@seleccionado">
+                                @especialidad.Nombre
+                            </option>
+                        }
+                    </select>
+                </div>
 
-        <div class="row g-3">
-            @foreach (var profesional in Model)
+                <div class="col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        Buscar
+                    </button>
+                </div>
+
+            </form>
+
+            @if (ViewBag.Mensaje != null)
             {
-                <div class="col-md-6">
-                    <div class="card shadow-sm h-100" style="border-radius:12px;">
-                        <div class="card-body">
-                            <h5 class="card-title mb-1">@profesional.NombreCompleto</h5>
-                            <p class="text-muted small mb-2">@profesional.Especialidades</p>
-                            @if (!string.IsNullOrWhiteSpace(profesional.Descripcion))
-                            {
-                                <p class="small">@profesional.Descripcion</p>
-                            }
-                            <p class="mb-1"><i class="bx bx-dollar-circle"></i> Consulta: @profesional.PrecioConsulta.ToString("C")</p>
-                            <p class="mb-3"><i class="bx bx-phone"></i> @profesional.Telefono</p>
-                            <a class="btn btn-primary w-100"
-                               asp-controller="Citas" asp-action="Crear"
-                               asp-route-profesionalId="@profesional.Id"
-                               asp-route-profesionalNombre="@profesional.NombreCompleto">
-                                Agendar con este profesional
-                            </a>
-                        </div>
-                    </div>
+                <div class="alert alert-danger" role="alert">
+                    @ViewBag.Mensaje
                 </div>
             }
+
+            @if (Model == null || !Model.Any())
+            {
+                <div class="clinic-empty-state">
+                    <h5 class="mb-2">No hay profesionales disponibles</h5>
+                    <p class="mb-3">
+                        No se encontraron profesionales con los filtros seleccionados.
+                    </p>
+
+                    <a asp-controller="Citas" asp-action="Profesionales" class="btn btn-primary">
+                        Ver todos
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var profesional in Model)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="clinic-card-soft h-100 p-4">
+
+                                <div class="d-flex align-items-start gap-3 mb-3">
+                                    <div class="rounded-circle text-white d-flex align-items-center justify-content-center"
+                                         style="width:46px;height:46px;background:linear-gradient(90deg,#696cff,#5db0ff);font-weight:700;">
+                                        <i class="bx bx-plus-medical"></i>
+                                    </div>
+
+                                    <div>
+                                        <h5 class="mb-1 clinic-title">
+                                            @profesional.NombreCompleto
+                                        </h5>
+
+                                        <small class="text-muted">
+                                            Profesional médico
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <p class="clinic-subtitle mb-3">
+                                    @profesional.Descripcion
+                                </p>
+
+                                <div class="clinic-info-box mb-3">
+                                    <small class="opacity-75">Precio de consulta</small>
+                                    <div class="fw-bold fs-5">
+                                        ₡@profesional.PrecioConsulta.ToString("N2")
+                                    </div>
+                                </div>
+
+                                <div class="d-grid">
+                                    <a class="btn btn-primary"
+                                       asp-controller="Citas"
+                                       asp-action="Crear"
+                                       asp-route-profesionalId="@profesional.Id"
+                                       asp-route-profesionalNombre="@profesional.NombreCompleto">
+                                        Agendar cita
+                                    </a>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
         </div>
 
-        <a asp-controller="Home" asp-action="Inicio" class="btn btn-link mt-3">&larr; Elegir otra especialidad</a>
     </div>
 </section>

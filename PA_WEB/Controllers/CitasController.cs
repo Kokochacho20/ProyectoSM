@@ -34,55 +34,68 @@ namespace PA_WEB.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Profesionales(int? especialidadId, string? texto)
+        private async Task<List<EspecialidadModel>> ConsultarEspecialidadesAsync()
         {
             using var client = CrearCliente();
 
-// Construir query string solo con parámetros presentes
-var url = $"{UrlApi}profesionales";
-var query = new List<string>();
-if (especialidadId.HasValue && especialidadId.Value != 0)
-    query.Add($"especialidadId={especialidadId.Value}");
-if (!string.IsNullOrWhiteSpace(texto))
-    query.Add($"texto={Uri.EscapeDataString(texto)}");
-if (query.Any())
-    url += "?" + string.Join("&", query);
+            var response = await client.GetAsync($"{UrlApi}especialidades");
 
-var response = await client.GetAsync(url);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return new List<EspecialidadModel>();
+            }
 
-if (response.StatusCode == HttpStatusCode.Unauthorized)
-{
-    return RedirigirSesionExpirada();
-}
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<EspecialidadModel>();
+            }
+
+            var especialidades = await response.Content.ReadFromJsonAsync<List<EspecialidadModel>>();
+
+            return especialidades ?? new List<EspecialidadModel>();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Profesionales(string? texto, int? especialidadId)
+        {
+            using var client = CrearCliente();
+
+            var especialidades = await ConsultarEspecialidadesAsync();
+
+            ViewBag.Texto = texto;
+            ViewBag.EspecialidadId = especialidadId;
+            ViewBag.Especialidades = especialidades;
+
+            var parametros = new List<string>();
+
+            if (!string.IsNullOrWhiteSpace(texto))
+            {
+                parametros.Add($"texto={Uri.EscapeDataString(texto)}");
+            }
+
+            if (especialidadId.HasValue && especialidadId.Value > 0)
+            {
+                parametros.Add($"especialidadId={especialidadId.Value}");
+            }
+
+            var query = parametros.Count > 0
+                ? "?" + string.Join("&", parametros)
+                : string.Empty;
+
+            var response = await client.GetAsync($"{UrlApi}profesionales{query}");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
 
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel<List<ProfesionalModel>>>();
 
             if (!response.IsSuccessStatusCode || resultado?.Data is null)
             {
-                TempData["Mensaje"] = resultado?.Message ?? "No se pudieron cargar los profesionales.";
-                return RedirectToAction("Inicio", "Home");
+                ViewBag.Mensaje = resultado?.Message ?? "No se pudieron cargar los profesionales.";
+                return View(new List<ProfesionalModel>());
             }
-
-            // Obtener la lista de especialidades para el combo (Todas las especialidades)
-            var respEsps = await client.GetAsync($"{UrlApi}especialidades");
-            List<EspecialidadModel>? especialidades = null;
-            if (respEsps.IsSuccessStatusCode)
-            {
-                // Many APIs return a plain array for this endpoint. Try to read as List<T> first
-                // and fall back to the wrapped ResultModel<T> shape if necessary.
-                try
-                {
-                    especialidades = await respEsps.Content.ReadFromJsonAsync<List<EspecialidadModel>>();
-                }
-                catch (System.Text.Json.JsonException)
-                {
-                    var resultadoEsps = await respEsps.Content.ReadFromJsonAsync<ResultModel<List<EspecialidadModel>>>();
-                    especialidades = resultadoEsps?.Data;
-                }
-            }
-
-            ViewBag.Especialidades = especialidades ?? new List<EspecialidadModel>();
 
             return View(resultado.Data);
         }
@@ -94,10 +107,8 @@ if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 ProfesionalMedicoId = profesionalId,
                 ProfesionalMedicoNombre = profesionalNombre,
-
                 Fecha = DateTime.Today,
                 Hora = new TimeSpan(8, 0, 0),
-
                 NombrePaciente = HttpContext.Session.GetString("NombreUsuario") ?? string.Empty,
                 IdentificacionPaciente = HttpContext.Session.GetString("IdentificacionUsuario") ?? string.Empty,
                 CorreoPaciente = HttpContext.Session.GetString("CorreoUsuario") ?? string.Empty,
@@ -128,56 +139,38 @@ if (response.StatusCode == HttpStatusCode.Unauthorized)
 
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
-            // Validate and compose FechaHoraInicio explicitly to avoid culture/format issues
-            // model.Fecha is DateTime with date component, model.Hora is TimeSpan
-            var fecha = model.Fecha.Date;
-            var hora = model.Hora;
-            var fechaHoraInicio = fecha + hora; // DateTime + TimeSpan
-
             var request = new
             {
-usuarioId = usuarioId,
-profesionalMedicoId = model.ProfesionalMedicoId,
-fechaHoraInicio = fechaHoraInicio,
-esParaOtraPersona = model.EsParaOtraPersona,
-nombrePaciente = model.NombrePaciente,
-identificacionPaciente = model.IdentificacionPaciente,
-fechaNacimientoPaciente = model.FechaNacimientoPaciente,
-correoPaciente = model.CorreoPaciente,
-telefonoPaciente = model.TelefonoPaciente,
-motivo = model.Motivo
-
+                UsuarioId = usuarioId,
+                model.ProfesionalMedicoId,
+                FechaHoraInicio = fechaHoraInicio,
+                model.EsParaOtraPersona,
+                model.NombrePaciente,
+                model.IdentificacionPaciente,
+                model.FechaNacimientoPaciente,
+                model.CorreoPaciente,
+                model.TelefonoPaciente,
+                model.Motivo
             };
 
             using var client = CrearCliente();
 
             var response = await client.PostAsJsonAsync($"{UrlApi}citas/usuario", request);
 
-if (response.StatusCode == HttpStatusCode.Unauthorized)
-{
-    return RedirigirSesionExpirada();
-}
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
 
-var responseBody = await response.Content.ReadAsStringAsync();
-
-ResultModel<CitaModel>? resultado = null;
-try
-{
-    resultado = System.Text.Json.JsonSerializer.Deserialize<ResultModel<CitaModel>>(responseBody, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-}
-catch (System.Text.Json.JsonException)
-{
-    // ignore deserialization failure; we'll use raw responseBody for messages
-}
-
+            var resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
 
             if (!response.IsSuccessStatusCode)
             {
-                ViewBag.Mensaje = resultado?.Message ?? responseBody ?? "No se pudo registrar la cita.";
+                ViewBag.Mensaje = resultado?.Message ?? "No se pudo registrar la cita.";
                 return View(model);
             }
 
-            TempData["Mensaje"] = resultado?.Message ?? "Cita registrada correctamente.";
+            TempData["Mensaje"] = "Cita registrada correctamente.";
             return RedirectToAction("Index");
         }
 
@@ -259,9 +252,8 @@ catch (System.Text.Json.JsonException)
 
             if (!response.IsSuccessStatusCode)
             {
-                var responseBody = await response.Content.ReadAsStringAsync();
                 var resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
-                ViewBag.Mensaje = resultado?.Message ?? responseBody ?? "No se pudo modificar la cita.";
+                ViewBag.Mensaje = resultado?.Message ?? "No se pudo modificar la cita.";
                 return View(model);
             }
 
@@ -289,12 +281,6 @@ catch (System.Text.Json.JsonException)
             }
 
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel>();
-
-            if (resultado is null || string.IsNullOrWhiteSpace(resultado.Message))
-            {
-                var body = await response.Content.ReadAsStringAsync();
-                // no logging, keep silent in production
-            }
 
             TempData["Mensaje"] = resultado?.Message
                 ?? (response.IsSuccessStatusCode ? "Cita cancelada." : "No se pudo cancelar la cita.");
