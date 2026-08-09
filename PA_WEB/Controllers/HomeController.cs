@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PA_WEB.Models;
+using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
 namespace PA_WEB.Controllers
@@ -8,9 +10,34 @@ namespace PA_WEB.Controllers
     {
         private string UrlApi => configuration["Valores:UrlApi"]!;
 
-        [HttpGet]
-        public IActionResult Index()
+        private HttpClient CrearCliente()
         {
+            return httpClientFactory.CreateClient();
+        }
+
+        private HttpClient CrearClienteAutenticado()
+        {
+            var client = httpClientFactory.CreateClient();
+
+            var token = HttpContext.Session.GetString("Token");
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            return client;
+        }
+
+        [HttpGet]
+        public IActionResult Index(string? mensaje)
+        {
+            if (!string.IsNullOrWhiteSpace(mensaje))
+            {
+                TempData["Mensaje"] = mensaje;
+            }
+
             return View(new InicioSesionModel());
         }
 
@@ -25,7 +52,7 @@ namespace PA_WEB.Controllers
 
             try
             {
-                using var client = httpClientFactory.CreateClient();
+                using var client = CrearCliente();
 
                 var request = new
                 {
@@ -47,6 +74,12 @@ namespace PA_WEB.Controllers
                     HttpContext.Session.SetString("IdentificacionUsuario", usuario.Identificacion);
                     HttpContext.Session.SetString("FechaNacimientoUsuario", usuario.FechaNacimiento.ToString("yyyy-MM-dd"));
                     HttpContext.Session.SetString("Token", resultado.Data.Token);
+
+                    if (resultado.Data.TemporaryPassword)
+                    {
+                        TempData["Mensaje"] = "Ingresó con una contraseña temporal. Debe actualizar su contraseña antes de continuar.";
+                        return RedirectToAction("ActualizarContrasena", "Home");
+                    }
 
                     return RedirectToAction("Inicio", "Home");
                 }
@@ -77,7 +110,7 @@ namespace PA_WEB.Controllers
 
             try
             {
-                using var client = httpClientFactory.CreateClient();
+                using var client = CrearCliente();
 
                 var request = new
                 {
@@ -125,7 +158,7 @@ namespace PA_WEB.Controllers
 
             try
             {
-                using var client = httpClientFactory.CreateClient();
+                using var client = CrearCliente();
 
                 var request = new
                 {
@@ -155,8 +188,9 @@ namespace PA_WEB.Controllers
         public IActionResult ActualizarContrasena()
         {
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            var token = HttpContext.Session.GetString("Token");
 
-            if (usuarioId is null)
+            if (usuarioId is null || string.IsNullOrWhiteSpace(token))
             {
                 TempData["Mensaje"] = "Debe iniciar sesión para actualizar su contraseña.";
                 return RedirectToAction("Index", "Home");
@@ -169,8 +203,9 @@ namespace PA_WEB.Controllers
         public async Task<IActionResult> ActualizarContrasena(ActualizarContrasenaModel model)
         {
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            var token = HttpContext.Session.GetString("Token");
 
-            if (usuarioId is null)
+            if (usuarioId is null || string.IsNullOrWhiteSpace(token))
             {
                 TempData["Mensaje"] = "Debe iniciar sesión para actualizar su contraseña.";
                 return RedirectToAction("Index", "Home");
@@ -183,7 +218,7 @@ namespace PA_WEB.Controllers
 
             try
             {
-                using var client = httpClientFactory.CreateClient();
+                using var client = CrearClienteAutenticado();
 
                 var request = new
                 {
@@ -193,6 +228,14 @@ namespace PA_WEB.Controllers
                 };
 
                 var response = await client.PutAsJsonAsync(UrlApi + "usuarios/ActualizarContrasena", request);
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    HttpContext.Session.Clear();
+                    TempData["Mensaje"] = "La sesión expiró o el token no es válido. Inicie sesión nuevamente.";
+                    return RedirectToAction("Index", "Home");
+                }
+
                 var resultado = await response.Content.ReadFromJsonAsync<ResultModel>();
 
                 if (response.IsSuccessStatusCode && resultado?.Success == true)
@@ -215,8 +258,9 @@ namespace PA_WEB.Controllers
         public async Task<IActionResult> Inicio()
         {
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId");
+            var token = HttpContext.Session.GetString("Token");
 
-            if (usuarioId is null)
+            if (usuarioId is null || string.IsNullOrWhiteSpace(token))
             {
                 TempData["Mensaje"] = "Debe iniciar sesión para acceder al sistema.";
                 return RedirectToAction("Index", "Home");
@@ -224,9 +268,16 @@ namespace PA_WEB.Controllers
 
             try
             {
-                using var client = httpClientFactory.CreateClient();
+                using var client = CrearClienteAutenticado();
 
                 var response = await client.GetAsync(UrlApi + "especialidades");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    HttpContext.Session.Clear();
+                    TempData["Mensaje"] = "La sesión expiró o el token no es válido. Inicie sesión nuevamente.";
+                    return RedirectToAction("Index", "Home");
+                }
 
                 var especialidades = response.IsSuccessStatusCode
                     ? await response.Content.ReadFromJsonAsync<List<EspecialidadModel>>()
