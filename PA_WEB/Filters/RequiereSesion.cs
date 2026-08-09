@@ -8,10 +8,17 @@ namespace PA_WEB.Filters
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var usuarioId = context.HttpContext.Session.GetInt32("UsuarioId");
+            var token = context.HttpContext.Session.GetString("Token");
 
-            if (usuarioId is null)
+            if (usuarioId is null || string.IsNullOrWhiteSpace(token))
             {
-                context.Result = new RedirectToActionResult("Index", "Home", null);
+                context.HttpContext.Session.Clear();
+
+                context.Result = new RedirectToActionResult(
+                    "Index",
+                    "Home",
+                    new { mensaje = "Debe iniciar sesión para acceder al sistema." });
+
                 return;
             }
 

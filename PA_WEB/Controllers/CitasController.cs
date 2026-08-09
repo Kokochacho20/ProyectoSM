@@ -1,31 +1,61 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PA_WEB.Filters;
 using PA_WEB.Models;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace PA_WEB.Controllers
 {
     [RequiereSesion]
     public class CitasController(IHttpClientFactory httpClientFactory, IConfiguration configuration) : Controller
     {
-        private HttpClient CrearCliente() => httpClientFactory.CreateClient();
         private string UrlApi => configuration["Valores:UrlApi"]!;
+
+        private HttpClient CrearCliente()
+        {
+            var client = httpClientFactory.CreateClient();
+
+            var token = HttpContext.Session.GetString("Token");
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
+
+            return client;
+        }
+
+        private IActionResult RedirigirSesionExpirada()
+        {
+            HttpContext.Session.Clear();
+            TempData["Mensaje"] = "La sesión expiró o el token no es válido. Inicie sesión nuevamente.";
+            return RedirectToAction("Index", "Home");
+        }
 
         [HttpGet]
         public async Task<IActionResult> Profesionales(int? especialidadId, string? texto)
         {
             using var client = CrearCliente();
 
-            // Construir query string solo con parámetros presentes
-            var url = $"{UrlApi}profesionales";
-            var query = new List<string>();
-            if (especialidadId.HasValue && especialidadId.Value != 0)
-                query.Add($"especialidadId={especialidadId.Value}");
-            if (!string.IsNullOrWhiteSpace(texto))
-                query.Add($"texto={Uri.EscapeDataString(texto)}");
-            if (query.Any())
-                url += "?" + string.Join("&", query);
+// Construir query string solo con parámetros presentes
+var url = $"{UrlApi}profesionales";
+var query = new List<string>();
+if (especialidadId.HasValue && especialidadId.Value != 0)
+    query.Add($"especialidadId={especialidadId.Value}");
+if (!string.IsNullOrWhiteSpace(texto))
+    query.Add($"texto={Uri.EscapeDataString(texto)}");
+if (query.Any())
+    url += "?" + string.Join("&", query);
 
-            var response = await client.GetAsync(url);
+var response = await client.GetAsync(url);
+
+if (response.StatusCode == HttpStatusCode.Unauthorized)
+{
+    return RedirigirSesionExpirada();
+}
+
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel<List<ProfesionalModel>>>();
 
             if (!response.IsSuccessStatusCode || resultado?.Data is null)
@@ -64,12 +94,17 @@ namespace PA_WEB.Controllers
             {
                 ProfesionalMedicoId = profesionalId,
                 ProfesionalMedicoNombre = profesionalNombre,
+
+                Fecha = DateTime.Today,
+                Hora = new TimeSpan(8, 0, 0),
+
                 NombrePaciente = HttpContext.Session.GetString("NombreUsuario") ?? string.Empty,
                 IdentificacionPaciente = HttpContext.Session.GetString("IdentificacionUsuario") ?? string.Empty,
                 CorreoPaciente = HttpContext.Session.GetString("CorreoUsuario") ?? string.Empty,
                 TelefonoPaciente = HttpContext.Session.GetString("TelefonoUsuario") ?? string.Empty,
                 FechaNacimientoPaciente = DateTime.TryParse(
-                    HttpContext.Session.GetString("FechaNacimientoUsuario"), out var fecha) ? fecha : default
+                    HttpContext.Session.GetString("FechaNacimientoUsuario"),
+                    out var fechaNacimiento) ? fechaNacimiento : DateTime.Today
             };
 
             return View(model);
@@ -79,7 +114,17 @@ namespace PA_WEB.Controllers
         public async Task<IActionResult> Crear(CrearCitaModel model)
         {
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
+
+            var fechaHoraInicio = model.Fecha.Date + model.Hora;
+
+            if (fechaHoraInicio.Year < 1753)
+            {
+                ViewBag.Mensaje = "Debe seleccionar una fecha y hora válida para la cita.";
+                return View(model);
+            }
 
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
@@ -91,33 +136,40 @@ namespace PA_WEB.Controllers
 
             var request = new
             {
-                usuarioId = usuarioId,
-                profesionalMedicoId = model.ProfesionalMedicoId,
-                fechaHoraInicio = fechaHoraInicio,
-                esParaOtraPersona = model.EsParaOtraPersona,
-                nombrePaciente = model.NombrePaciente,
-                identificacionPaciente = model.IdentificacionPaciente,
-                fechaNacimientoPaciente = model.FechaNacimientoPaciente,
-                correoPaciente = model.CorreoPaciente,
-                telefonoPaciente = model.TelefonoPaciente,
-                motivo = model.Motivo
+usuarioId = usuarioId,
+profesionalMedicoId = model.ProfesionalMedicoId,
+fechaHoraInicio = fechaHoraInicio,
+esParaOtraPersona = model.EsParaOtraPersona,
+nombrePaciente = model.NombrePaciente,
+identificacionPaciente = model.IdentificacionPaciente,
+fechaNacimientoPaciente = model.FechaNacimientoPaciente,
+correoPaciente = model.CorreoPaciente,
+telefonoPaciente = model.TelefonoPaciente,
+motivo = model.Motivo
+
             };
 
             using var client = CrearCliente();
 
             var response = await client.PostAsJsonAsync($"{UrlApi}citas/usuario", request);
 
-            var responseBody = await response.Content.ReadAsStringAsync();
+if (response.StatusCode == HttpStatusCode.Unauthorized)
+{
+    return RedirigirSesionExpirada();
+}
 
-            ResultModel<CitaModel>? resultado = null;
-            try
-            {
-                resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
-            }
-            catch (System.Text.Json.JsonException)
-            {
-                // ignore deserialization failure; we'll use raw responseBody for messages
-            }
+var responseBody = await response.Content.ReadAsStringAsync();
+
+ResultModel<CitaModel>? resultado = null;
+try
+{
+    resultado = System.Text.Json.JsonSerializer.Deserialize<ResultModel<CitaModel>>(responseBody, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+}
+catch (System.Text.Json.JsonException)
+{
+    // ignore deserialization failure; we'll use raw responseBody for messages
+}
+
 
             if (!response.IsSuccessStatusCode)
             {
@@ -135,17 +187,31 @@ namespace PA_WEB.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
             using var client = CrearCliente();
+
             var response = await client.GetAsync($"{UrlApi}citas?usuarioId={usuarioId}");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
+
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel<List<CitaModel>>>();
 
-            return View(resultado?.Data ?? []);
+            return View(resultado?.Data ?? new List<CitaModel>());
         }
 
         [HttpGet]
         public async Task<IActionResult> Modificar(int citaId)
         {
             using var client = CrearCliente();
+
             var response = await client.GetAsync($"{UrlApi}citas/{citaId}");
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
+
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel<CitaModel>>();
 
             if (!response.IsSuccessStatusCode || resultado?.Data is null)
@@ -155,6 +221,7 @@ namespace PA_WEB.Controllers
             }
 
             var cita = resultado.Data;
+
             ViewBag.ProfesionalMedico = cita.ProfesionalMedico;
 
             return View(new ModificarCitaModel
@@ -169,7 +236,9 @@ namespace PA_WEB.Controllers
         public async Task<IActionResult> Modificar(ModificarCitaModel model)
         {
             if (!ModelState.IsValid)
+            {
                 return View(model);
+            }
 
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
@@ -180,7 +249,13 @@ namespace PA_WEB.Controllers
             };
 
             using var client = CrearCliente();
+
             var response = await client.PutAsJsonAsync($"{UrlApi}citas/{model.CitaId}", request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -200,12 +275,19 @@ namespace PA_WEB.Controllers
             var usuarioId = HttpContext.Session.GetInt32("UsuarioId")!.Value;
 
             using var client = CrearCliente();
+
             var httpRequest = new HttpRequestMessage(HttpMethod.Put, $"{UrlApi}citas/{citaId}/cancelar")
             {
                 Content = JsonContent.Create(new { UsuarioId = usuarioId })
             };
 
             var response = await client.SendAsync(httpRequest);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                return RedirigirSesionExpirada();
+            }
+
             var resultado = await response.Content.ReadFromJsonAsync<ResultModel>();
 
             if (resultado is null || string.IsNullOrWhiteSpace(resultado.Message))
@@ -216,6 +298,7 @@ namespace PA_WEB.Controllers
 
             TempData["Mensaje"] = resultado?.Message
                 ?? (response.IsSuccessStatusCode ? "Cita cancelada." : "No se pudo cancelar la cita.");
+
             return RedirectToAction("Index");
         }
     }

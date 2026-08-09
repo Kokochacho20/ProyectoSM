@@ -19,18 +19,19 @@ namespace PA_API.Services
     public class UsuarioService(
         ILogger<UsuarioService> logger,
         IConfiguration configuration,
-        IEmailService emailService) : IUsuarioService
+        IEmailService emailService,
+        IUtilesService utilesService) : IUsuarioService
     {
         private readonly string _connectionString = configuration.GetConnectionString(ConnectionStringConstants.MainDatabase)
-        ?? throw new InvalidOperationException(
-            $"Connection string '{ConnectionStringConstants.MainDatabase}' no configurada.");
-
+            ?? throw new InvalidOperationException(
+                $"Connection string '{ConnectionStringConstants.MainDatabase}' no configurada.");
 
         public async Task<ResultDto<List<UsuarioDto>>> ObtenerUsuariosAsync(bool? activo)
         {
             try
             {
                 using IDbConnection conexion = new SqlConnection(_connectionString);
+
                 var usuarios = await conexion.QueryAsync<UsuarioDto>(
                     StoreProceduresConstants.sp_usuarios_lista,
                     new { Activo = activo },
@@ -50,6 +51,7 @@ namespace PA_API.Services
             try
             {
                 using IDbConnection conexion = new SqlConnection(_connectionString);
+
                 var usuario = await conexion.QueryFirstOrDefaultAsync<UsuarioDto>(
                     StoreProceduresConstants.sp_usuario_obtener,
                     new
@@ -59,8 +61,10 @@ namespace PA_API.Services
                     commandType: CommandType.StoredProcedure);
 
                 if (usuario == null)
+                {
                     return ResultDto<UsuarioDto>
                         .Fail(StatusCodes.Status404NotFound, "Usuario no encontrado.");
+                }
 
                 return ResultDto<UsuarioDto>.Ok(usuario);
             }
@@ -76,6 +80,7 @@ namespace PA_API.Services
             try
             {
                 using IDbConnection conexion = new SqlConnection(_connectionString);
+
                 var usuario = await conexion.QueryFirstOrDefaultAsync<UsuarioConContrasenaDto>(
                     StoreProceduresConstants.sp_usuario_iniciar_sesion,
                     new
@@ -93,32 +98,49 @@ namespace PA_API.Services
             }
         }
 
-
         public async Task<ResultDto<InicioSesionResponseDto>> InicioSesionAsync(InicioSesionRequestDto request)
         {
             try
             {
-                using IDbConnection conexion = new SqlConnection(_connectionString);
-
                 var usuario = await ObtenerUsuarioAsync(request.CorreoElectronico);
 
                 if (usuario is null || !usuario.Estado)
+                {
                     return ResultDto<InicioSesionResponseDto>
-                        .Fail(StatusCodes.Status401Unauthorized, "No se pudo validar la sesion.");
+                        .Fail(StatusCodes.Status401Unauthorized, "No se pudo validar la sesión.");
+                }
 
+                if (usuario.TemporaryPassword)
+                {
+                    if (usuario.FechaExpiracionPasswordTemporal is null ||
+                        usuario.FechaExpiracionPasswordTemporal.Value < DateTime.UtcNow)
+                    {
+                        return ResultDto<InicioSesionResponseDto>
+                            .Fail(StatusCodes.Status401Unauthorized,
+                                "La contraseña temporal venció. Debe solicitar una nueva desde Recuperar acceso.");
+                    }
+                }
 
                 if (!BCrypt.Net.BCrypt.Verify(request.Contrasenna, usuario.PasswordHash))
+                {
                     return ResultDto<InicioSesionResponseDto>
-                            .Fail(StatusCodes.Status401Unauthorized, "No se pudo validar la sesion.");
+                        .Fail(StatusCodes.Status401Unauthorized, "No se pudo validar la sesión.");
+                }
 
-                // TODO: generar JWT real aquí (firma, claims, expiración según config del proyecto)
-                var token = "TODO-generar-jwt";
-                var expiraEn = DateTime.UtcNow.AddHours(8);
+                var token = utilesService.GenerarToken(
+                    usuario.Id,
+                    usuario.Identificacion,
+                    usuario.NombreCompleto,
+                    usuario.CorreoElectronico);
+
+                var expiraEn = DateTime.UtcNow.AddMinutes(30);
 
                 var session = new InicioSesionResponseDto
                 {
                     Token = token,
                     ExpiraEn = expiraEn,
+                    TemporaryPassword = usuario.TemporaryPassword,
+                    FechaExpiracionPasswordTemporal = usuario.FechaExpiracionPasswordTemporal,
                     Usuario = new UsuarioDto
                     {
                         Id = usuario.Id,
@@ -134,7 +156,7 @@ namespace PA_API.Services
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error al iniciar sesion de usuario");
+                logger.LogError(ex, "Error al iniciar sesión de usuario");
                 throw;
             }
         }
@@ -144,7 +166,10 @@ namespace PA_API.Services
             try
             {
                 if (request.Contrasenna != request.ConfirmarContrasenna)
-                    return ResultDto<UsuarioDto>.Fail(StatusCodes.Status400BadRequest, "Las contraseñas no coinciden.");
+                {
+                    return ResultDto<UsuarioDto>
+                        .Fail(StatusCodes.Status400BadRequest, "Las contraseñas no coinciden.");
+                }
 
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
@@ -160,22 +185,26 @@ namespace PA_API.Services
                     PasswordHash = passwordHash
                 };
 
-                // El SP inserta y devuelve el Id (Guid) generado.
                 var usuario = await conexion.QueryFirstOrDefaultAsync<UsuarioDto>(
                     StoreProceduresConstants.sp_usuario_registrar,
                     parametros,
                     commandType: CommandType.StoredProcedure);
 
                 if (usuario is null)
-                    return ResultDto<UsuarioDto>.Fail(StatusCodes.Status400BadRequest, "Usuario no se pudo registrar.");
+                {
+                    return ResultDto<UsuarioDto>
+                        .Fail(StatusCodes.Status400BadRequest, "Usuario no se pudo registrar.");
+                }
 
                 return ResultDto<UsuarioDto>.Ok(usuario, StatusCodes.Status201Created);
             }
             catch (SqlException ex)
             {
                 logger.LogError(ex, "Error SQL al registrar usuario {Correo}", request.CorreoElectronico);
-                return ResultDto<UsuarioDto>.Fail(StatusCodes.Status409Conflict,
-                    "Identificacion o Correo electronico ya registrados.");
+
+                return ResultDto<UsuarioDto>.Fail(
+                    StatusCodes.Status409Conflict,
+                    "Identificación o correo electrónico ya registrados.");
             }
             catch (Exception ex)
             {
@@ -193,29 +222,41 @@ namespace PA_API.Services
                 var usuario = await ObtenerUsuarioAsync(request.CorreoElectronico);
 
                 if (usuario is null || !usuario.Estado)
-                    return ResultDto.Fail(StatusCodes.Status400BadRequest, "La informacion no se pudo validar correctamente.");
-
-                var passwordTemporal = "Temporal123!";
-                var nuevoHash = BCrypt.Net.BCrypt.HashPassword(passwordTemporal);
-
-                var result = await conexion.ExecuteAsync(
-                    StoreProceduresConstants.sp_actualizar_contrasena,
-                    new
-                    {
-                        usuario.Id,
-                        PasswordHash = nuevoHash,
-                        TemporaryPassword = true
-                    },
-                    commandType: CommandType.StoredProcedure);
-
-                if (result > 0)
                 {
-                    await emailService.EnviarPasswordTemporalAsync(usuario.CorreoElectronico, usuario.NombreCompleto, passwordTemporal);
+                    return ResultDto.Fail(
+                        StatusCodes.Status400BadRequest,
+                        "La información no se pudo validar correctamente.");
+                }
+
+                var passwordTemporal = GenerarPasswordTemporal();
+                var nuevoHash = BCrypt.Net.BCrypt.HashPassword(passwordTemporal);
+                var fechaExpiracion = DateTime.UtcNow.AddMinutes(15);
+
+                var result = await conexion.QueryFirstOrDefaultAsync<int>(
+    StoreProceduresConstants.sp_actualizar_contrasena,
+    new
+    {
+        usuario.Id,
+        PasswordHash = nuevoHash,
+        TemporaryPassword = true,
+        FechaExpiracionPasswordTemporal = fechaExpiracion
+    },
+    commandType: CommandType.StoredProcedure);
+
+                if (result == 1)
+                {
+                    await emailService.EnviarPasswordTemporalAsync(
+                        usuario.CorreoElectronico,
+                        usuario.NombreCompleto,
+                        passwordTemporal,
+                        fechaExpiracion);
+
                     return ResultDto.Ok(message: "Si el correo existe, recibirá un correo con instrucciones.");
                 }
 
-                return ResultDto.Fail(StatusCodes.Status400BadRequest,
-                    "No se ha recuperado su acceso, por favor intente nuevamente");
+                return ResultDto.Fail(
+                    StatusCodes.Status400BadRequest,
+                    "No se ha recuperado su acceso, por favor intente nuevamente.");
             }
             catch (Exception ex)
             {
@@ -231,40 +272,50 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 if (request.ContrasenaNueva != request.ConfirmarContrasenaNueva)
-                    return ResultDto.Fail(StatusCodes.Status400BadRequest, "Las contraseñas no coinciden.");
+                {
+                    return ResultDto.Fail(
+                        StatusCodes.Status400BadRequest,
+                        "Las contraseñas no coinciden.");
+                }
 
                 var nuevoHash = BCrypt.Net.BCrypt.HashPassword(request.ContrasenaNueva);
 
-                var result = await conexion.ExecuteAsync(
-                    StoreProceduresConstants.sp_actualizar_contrasena,
-                    new
-                    {
-                        request.Id,
-                        PasswordHash = nuevoHash,
-                        TemporaryPassword = false
-                    },
-                    commandType: CommandType.StoredProcedure);
+                var result = await conexion.QueryFirstOrDefaultAsync<int>(
+    StoreProceduresConstants.sp_actualizar_contrasena,
+    new
+    {
+        request.Id,
+        PasswordHash = nuevoHash,
+        TemporaryPassword = false,
+        FechaExpiracionPasswordTemporal = (DateTime?)null
+    },
+    commandType: CommandType.StoredProcedure);
 
-                if (result > 0)
+                if (result == 1)
+                {
                     return ResultDto.Ok(message: "Contraseña actualizada exitosamente.");
+                }
 
-                return ResultDto.Fail(StatusCodes.Status400BadRequest,
-                    "La contraseña no se pudo actualizar correctamente.  Intentar nuevamente.");
-
+                return ResultDto.Fail(
+                    StatusCodes.Status400BadRequest,
+                    "La contraseña temporal venció o no se pudo actualizar. Solicite una nueva recuperación de acceso.");
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Error al actualizar contrasena.");
+                logger.LogError(ex, "Error al actualizar contraseña.");
                 throw;
             }
-
         }
 
         private static string GenerarPasswordTemporal()
         {
             const string caracteres = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
             var random = new Random();
-            return new string(Enumerable.Range(0, 10).Select(_ => caracteres[random.Next(caracteres.Length)]).ToArray());
+
+            return new string(
+                Enumerable.Range(0, 10)
+                    .Select(_ => caracteres[random.Next(caracteres.Length)])
+                    .ToArray());
         }
     }
 }

@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Recuperación de acceso</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f5f6fa; font-family:Arial, Helvetica, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f6fa; padding:30px 0;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 4px 18px rgba(0,0,0,0.08);">
+                    <tr>
+                        <td style="background:linear-gradient(90deg,#6c63ff,#5db0ff); padding:25px; color:#ffffff;">
+                            <h2 style="margin:0;">Clínica SM</h2>
+                            <p style="margin:5px 0 0 0;">Sistema de citas médicas</p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding:30px;">
+                            <h3 style="margin-top:0; color:#333333;">Recuperación de acceso</h3>
+
+                            <p style="color:#555555; font-size:15px;">
+                                Hola <strong>{{NOMBRE}}</strong>,
+                            </p>
+
+                            <p style="color:#555555; font-size:15px; line-height:1.5;">
+                                Se solicitó la recuperación de acceso para su cuenta registrada con el correo:
+                            </p>
+
+                            <p style="color:#333333; font-size:15px;">
+                                <strong>{{CORREO}}</strong>
+                            </p>
+
+                            <p style="color:#555555; font-size:15px; line-height:1.5;">
+                                Su contraseña temporal es:
+                            </p>
+
+                            <div style="background-color:#eef0ff; color:#333333; padding:15px; border-radius:8px; text-align:center; font-size:22px; font-weight:bold; letter-spacing:1px;">
+                                {{TEMPORAL}}
+                            </div>
+
+                            <p style="color:#b00020; font-size:15px; line-height:1.5; margin-top:25px;">
+                                Esta contraseña temporal tiene una validez de <strong>15 minutos</strong>.
+                            </p>
+
+                            <p style="color:#555555; font-size:15px; line-height:1.5;">
+                                Fecha y hora de vencimiento:
+                                <strong>{{EXPIRA}}</strong>
+                            </p>
+
+                            <p style="color:#555555; font-size:15px; line-height:1.5;">
+                                Ingrese al sistema utilizando esta contraseña temporal. Luego debe cambiarla desde la opción
+                                <strong>Actualizar contraseña</strong> dentro del sistema.
+                            </p>
+
+                            <p style="color:#999999; font-size:12px; margin-top:25px;">
+                                Fecha de solicitud: {{FECHA}}
+                            </p>
+
+                            <p style="color:#999999; font-size:12px;">
+                                Si usted no solicitó esta recuperación, puede ignorar este mensaje.
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color:#f0f2f8; padding:15px; text-align:center; color:#777777; font-size:12px;">
+                            Clínica SM | Proyecto Web - PA
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
