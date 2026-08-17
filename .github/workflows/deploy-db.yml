@@ -1,0 +1,22 @@
+name: Deploy DB Schema
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-db:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run crear_db script
+        uses: azure/sql-action@v2.3
+        with:
+          connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          path: "PA_API/Data/StoreProcedures/query_crear_db.sql"
+
+      - name: Run store procedures script
+        uses: azure/sql-action@v2.3
+        with:
+          connection-string: ${{ secrets.AZURE_SQL_CONNECTION_STRING }}
+          path: "PA_API/Data/StoreProcedures/store_procedures.sql"
