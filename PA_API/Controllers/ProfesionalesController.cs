@@ -30,5 +30,20 @@ namespace PA_API.Controllers
             var result = await profesionalService.ObtenerProfesionalPorIdAsync(profesionalId);
             return StatusCode(result.StatusCode, result);
         }
+
+
+        [HttpGet("{profesionalId}/disponibilidad")]
+        [ProducesResponseType(typeof(ResultDto<DisponibilidadSlotDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ObtenerDisponibilidadAsync(int profesionalId, DateTime inicio, DateTime fin)
+        {
+            var data = await profesionalService.ObtenerDisponibilidadAsync(
+                profesionalId,
+                inicio,
+                fin);
+
+            return Ok(data);
+        }
     }
 }

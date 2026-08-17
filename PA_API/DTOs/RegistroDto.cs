@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PA_API.DTOs
 {
@@ -27,8 +28,8 @@ namespace PA_API.DTOs
 
     public class ActualizarContrasenaRequestDto
     {
-        [Required]
-        public int Id { get; set; }
+        [JsonIgnore]
+        public int UsuarioId { get; set; }
         [Required]
         public string ContrasenaNueva { get; set; } = string.Empty;
         [Required]

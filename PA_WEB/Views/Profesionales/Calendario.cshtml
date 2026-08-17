@@ -1,0 +1,235 @@
+﻿@model CalendarioViewModel
+
+<main class="disponibilidad-calendario">
+    <div class="clinic-card-soft h-100 p-4">
+
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="rounded-circle text-white d-flex align-items-center justify-content-center"
+                 style="width:46px;height:46px;background:linear-gradient(90deg,#696cff,#5db0ff);font-weight:700;">
+                <i class="bx bx-plus-medical"></i>
+            </div>
+
+            <div>
+                <h5 class="mb-1 clinic-title">@Model.ProfesionalNombre</h5>
+                <small class="text-muted">Profesional médico</small>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <p class="card-subtitle">Seleccione una fecha y horario disponible.</p>
+        <hr />
+        <div class="cal-head">
+            <div class="cal-title">@Model.MesActual.ToString("MMMM yyyy")</div>
+
+            <div class="cal-nav">
+                @{
+                    var mesAnterior = Model.MesActual.AddMonths(-1);
+                    var esMesAnteriorAlActual = mesAnterior < new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+                }
+                <a asp-action="Calendario"
+                   asp-route-profesionalId="@Model.ProfesionalId"
+                   asp-route-mes="@mesAnterior.ToString("yyyy-MM-dd")"
+                   class="@(esMesAnteriorAlActual ? "disabled" : "")">‹</a>
+
+                <a asp-action="Calendario"
+                   asp-route-profesionalId="@Model.ProfesionalId"
+                   asp-route-mes="@Model.MesActual.AddMonths(1).ToString("yyyy-MM-dd")">›</a>
+            </div>
+        </div>
+
+        <div class="cal-grid">
+            <div class="cal-dow">D</div>
+            <div class="cal-dow">L</div>
+            <div class="cal-dow">M</div>
+            <div class="cal-dow">M</div>
+            <div class="cal-dow">J</div>
+            <div class="cal-dow">V</div>
+            <div class="cal-dow">S</div>
+
+            @{
+                var primerDia = Model.MesActual;
+                var espacios = (int)primerDia.DayOfWeek; // domingo = 0, ya calza con el header
+            }
+
+            @for (int i = 0; i < espacios; i++)
+            {
+                <div class="cal-day-empty"></div>
+            }
+
+            @foreach (var dia in Model.Dias)
+            {
+                var clase = dia.EsPasado
+                    ? "past"
+                    : dia.TieneDisponibilidad
+                        ? "available"
+                        : "unavailable";
+
+                if (Model.FechaSeleccionada.HasValue &&
+                    dia.Fecha.Date == Model.FechaSeleccionada.Value.Date)
+                {
+                    clase = "selected";
+                }
+
+                if (!dia.EsPasado && dia.TieneDisponibilidad)
+                {
+                    <a asp-action="Calendario"
+                       asp-route-citaId="@Model.CitaId"
+                       asp-route-profesionalId="@Model.ProfesionalId"
+                       asp-route-mes="@Model.MesActual.ToString("yyyy-MM-dd")"
+                       asp-route-fecha="@dia.Fecha.ToString("yyyy-MM-dd")"
+                       class="cal-day @clase">
+                        @dia.Fecha.Day
+                    </a>
+                }
+                else
+                {
+                    <div class="cal-day @clase">
+                        @dia.Fecha.Day
+                    </div>
+                }
+            }
+        </div>
+
+        @if (Model.FechaSeleccionada.HasValue)
+        {
+            <div class="slot-title">
+                Horarios disponibles · @Model.FechaSeleccionada.Value.ToString("dddd dd 'de' MMMM")
+            </div>
+
+            <div class="slot-grid">
+                @foreach (var slot in Model.Slots)
+                {
+                    var esCitaActual =
+                        Model.CitaId.HasValue &&
+                        Model.FechaCitaOriginal.HasValue &&
+                        Model.HoraCitaOriginal.HasValue &&
+                        Model.FechaSeleccionada.HasValue &&
+                        Model.FechaSeleccionada.Value.Date == Model.FechaCitaOriginal.Value.Date &&
+                        slot.HoraInicio == Model.HoraCitaOriginal.Value;
+
+                    var clase = esCitaActual
+                        ? "slot selected"
+                        : slot.Disponible
+                            ? "slot"
+                            : "slot disabled";
+
+                    <button type="button"
+                            class="@clase"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            title="@(esCitaActual ? "Esta es la hora que tienes reservada actualmente." : "")"
+                            data-fecha="@Model.FechaSeleccionada.Value.ToString("yyyy-MM-dd")"
+                            data-hora="@slot.HoraInicio.ToString(@"hh\:mm")"
+                        @(slot.Disponible || esCitaActual ? "" : "disabled")>
+
+                        @slot.HoraInicio.ToString(@"hh\:mm")
+
+                        @if (esCitaActual)
+                        {
+                            <i class="bx bx-check-circle ms-1"></i>
+                        }
+                    </button>
+                }
+            </div>
+
+            <div class="d-flex justify-content-end mt-4">
+                <span id="btnContinuarWrapper">
+                    <button type="button"
+                            class="btn-continuar"
+                            id="btnContinuar"
+                            disabled>
+                        Continuar
+                    </button>
+
+                </span>
+            </div>
+        }
+
+    </div>
+
+</main>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const slots = document.querySelectorAll(".slot:not(:disabled)");
+        const btnContinuar = document.getElementById("btnContinuar");
+        const wrapper = document.getElementById("btnContinuarWrapper");
+
+        if (!btnContinuar) {
+            return;
+        }
+
+        const citaActual = {
+            fecha: "@(Model.FechaCitaOriginal?.ToString("yyyy-MM-dd"))",
+            hora: "@(Model.HoraCitaOriginal?.ToString(@"hh\:mm"))"
+        };
+
+        let slotSeleccionado = null;
+
+        // Inicializar tooltips
+        document
+            .querySelectorAll('[data-bs-toggle="tooltip"]')
+            .forEach(el => new bootstrap.Tooltip(el));
+
+
+        slots.forEach(slot => {
+
+            slot.addEventListener("click", function () {
+
+                slots.forEach(s => s.classList.remove("selected"));
+
+                this.classList.add("selected");
+
+                slotSeleccionado = {
+                    fecha: this.dataset.fecha,
+                    hora: this.dataset.hora
+                };
+
+                const mismoHorario =
+                    slotSeleccionado.fecha === citaActual.fecha &&
+                    slotSeleccionado.hora === citaActual.hora;
+
+                console.log("Cita actual:", citaActual);
+                console.log("Seleccionado:", slotSeleccionado);
+                console.log("Mismo horario:", mismoHorario);
+
+                btnContinuar.disabled = mismoHorario;
+            });
+        });
+
+        btnContinuar.addEventListener("click", function () {
+
+            if (this.disabled || !slotSeleccionado) {
+                return;
+            }
+
+            const fecha = encodeURIComponent(slotSeleccionado.fecha);
+            const hora = encodeURIComponent(slotSeleccionado.hora);
+
+            let url;
+
+            @if (Model.CitaId.HasValue)
+            {
+                    <text>
+                            url =
+                                `/Citas/Modificar?citaId=@Model.CitaId.Value` +
+                                `&fecha=${fecha}` +
+                                `&hora=${hora}`;
+                    </text>
+            }
+            else
+            {
+                    <text>
+                            url =
+                                `/Citas/Crear?profesionalId=@Model.ProfesionalId` +
+                                `&fecha=${fecha}` +
+                                `&hora=${hora}`;
+                    </text>
+            }
+
+            window.location.href = url;
+        });
+    });
+</script>

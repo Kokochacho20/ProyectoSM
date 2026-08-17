@@ -33,7 +33,6 @@ namespace PA_API.Services
                     request.UsuarioId,
                     request.ProfesionalMedicoId,
                     request.FechaHoraInicio,
-                    FechaHoraFin = request.FechaHoraInicio.AddHours(1),
                     request.NombrePaciente,
                     request.IdentificacionPaciente,
                     request.FechaNacimientoPaciente,
@@ -119,8 +118,7 @@ namespace PA_API.Services
                 {
                     Id = citaId,
                     request.UsuarioId,
-                    request.FechaHoraInicio,
-                    FechaHoraFin = request.FechaHoraInicio.AddHours(1)
+                    request.FechaHoraInicio
                 };
 
                 var cita = await conexion.QuerySingleOrDefaultAsync<CitaResponseDto>(

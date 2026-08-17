@@ -12,6 +12,7 @@ namespace PA_API.Services
             var tokenHandler = new JwtSecurityTokenHandler();
 
             var secretKey = configuration["Jwt:SecretKey"]!;
+            _ = int.TryParse(configuration["Jwt:Timeout"]!, out int timeout);
 
             var key = Encoding.ASCII.GetBytes(secretKey);
 
@@ -26,7 +27,7 @@ namespace PA_API.Services
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddMinutes(30),
+                Expires = DateTime.UtcNow.AddMinutes(timeout),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature)

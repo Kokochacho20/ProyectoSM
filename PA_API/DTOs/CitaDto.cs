@@ -38,22 +38,20 @@ namespace PA_API.DTOs
     public class CitaResponseDto
     {
         public int Id { get; set; }
-
         public int UsuarioId { get; set; }
-
         public int ProfesionalMedicoId { get; set; }
-
         public string ProfesionalMedico { get; set; } = string.Empty;
 
-        public DateTime FechaHoraInicio { get; set; }
+        // Informacion de paciente
+        public string NombrePaciente { get; set; } = string.Empty;
+        public string IdentificacionPaciente { get; set; } = string.Empty;
+        public DateTime FechaNacimientoPaciente { get; set; }
+        public string CorreoPaciente { get; set; } = string.Empty;
+        public string TelefonoPaciente { get; set; } = string.Empty;
+        public string Motivo { get; set; } = string.Empty;
 
         public EstadoCita EstadoCita { get; set; }
-
-        public string NombrePaciente { get; set; } = string.Empty;
-
-        public string IdentificacionPaciente { get; set; } = string.Empty;
-
-        public string Motivo { get; set; } = string.Empty;
+        public DateTime FechaHoraInicio { get; set; }
     }
 
     public class ModificarCitaRequestDto
@@ -102,5 +100,14 @@ namespace PA_API.DTOs
 
         [JsonPropertyName("motivo")]
         public string? Motivo { get; set; }
+    }
+
+    public class DisponibilidadSlotDto
+    {
+        public DateTime Fecha { get; set; }
+        public int DiaSemana { get; set; }
+        public TimeSpan HoraInicio { get; set; }
+        public TimeSpan HoraFin { get; set; }
+        public bool Disponible { get; set; }
     }
 }

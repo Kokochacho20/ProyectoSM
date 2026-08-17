@@ -1,10 +1,12 @@
+using Microsoft.AspNetCore.Mvc.Filters;
+using PA_WEB.Filters;
+using PA_WEB.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
-
-builder.Services.AddHttpClient();
 
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -13,6 +15,27 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddTransient<ApiAuthorizationHandler>();
+
+builder.Services
+    .AddHttpClient("ApiClient", client =>
+    {
+        client.BaseAddress = new Uri(
+            builder.Configuration["Valores:UrlApi"]!);
+    })
+    .AddHttpMessageHandler<ApiAuthorizationHandler>();
+
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add<ApiAuthorizationFilter>();
+});
+
+builder.Services.AddTransient<ApiAuthorizationHandler>();
+builder.Services.AddTransient<IProfesionalService, ProfesionalService>();
+builder.Services.AddTransient<ICitasService, CitasService>();
+builder.Services.AddTransient<IUsuarioService, UsuariosService>();
 
 var app = builder.Build();
 
@@ -24,6 +47,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseRouting();
 
 app.UseSession();

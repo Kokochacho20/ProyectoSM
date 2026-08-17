@@ -22,12 +22,12 @@ BEGIN
         FechaNacimiento,
         PasswordHash,
         TemporaryPassword,
+        FechaExpiracionPasswordTemporal,
         Estado
     FROM Usuario
     WHERE CorreoElectronico = @CorreoElectronico;
 END
 GO
-
 
 ----------------------------------------------------------
 -- Registrar Usuario
@@ -310,14 +310,15 @@ BEGIN
             @UsuarioId IS NULL
             OR c.UsuarioId = @UsuarioId
         )
-    ORDER BY
-        c.FechaHoraInicio DESC;
+ORDER BY
+        c.EstadoCita ASC,
+        c.FechaHoraInicio ASC;
 END
 GO
 
 
 ----------------------------------------------------------
--- Obtener cita por citaId o UsuarioId
+-- Obtener cita por citaId
 ----------------------------------------------------------
 
 CREATE OR ALTER PROCEDURE sp_obtener_cita
@@ -366,7 +367,6 @@ CREATE OR ALTER PROCEDURE sp_crear_cita
     @UsuarioId INT,
     @ProfesionalMedicoId INT,
     @FechaHoraInicio DATETIME2,
-    @FechaHoraFin DATETIME2,
     @NombrePaciente NVARCHAR(200),
     @IdentificacionPaciente NVARCHAR(20),
     @FechaNacimientoPaciente DATE,
@@ -390,27 +390,13 @@ BEGIN
         )
             THROW 50001, 'Usuario invalido.', 1;
 
-        -- Validación al menos 24 horas y máximo 60 días
-        IF @FechaHoraInicio < DATEADD(HOUR, 24, GETDATE())
-            THROW 50006, 'La fecha/hora de inicio debe ser al menos 24 horas en el futuro.', 1;
-
-        IF @FechaHoraInicio > DATEADD(DAY, 60, GETDATE())
-            THROW 50007, 'La fecha/hora de inicio no puede ser mayor a 60 días desde ahora.', 1;
-
         DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
         DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);
-        DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
+                -- La cita tiene duracion fija en esta version inicial
+        DECLARE @FechaHoraFin DATETIME2 =
+            DATEADD(MINUTE, 39, @FechaHoraInicio);
 
-        IF NOT EXISTS (
-            SELECT 1
-            FROM HorarioProfesional
-            WHERE ProfesionalMedicoId = @ProfesionalMedicoId
-              AND DiaSemana = @DiaSemana
-              AND Estado = 1
-              AND HoraInicio <= @HoraInicioSolicitada
-              AND HoraFin >= @HoraFinSolicitada
-        )
-            THROW 50003, 'El profesional no atiende en ese día/horario.', 1;
+        DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
 
         IF EXISTS (
             SELECT 1
@@ -491,20 +477,42 @@ GO
 
 CREATE OR ALTER PROCEDURE sp_actualizar_contrasena
 (
-    @Id INT,
+    @UsuarioId INT,
     @PasswordHash NVARCHAR(300),
-    @TemporaryPassword BIT
+    @TemporaryPassword BIT,
+    @FechaExpiracionPasswordTemporal DATETIME2 = NULL
 )
 AS
 BEGIN
+    SET NOCOUNT ON;
+
     UPDATE Usuario
     SET
         PasswordHash = @PasswordHash,
-        TemporaryPassword = @TemporaryPassword
+        TemporaryPassword = @TemporaryPassword,
+        FechaExpiracionPasswordTemporal =
+            CASE
+                WHEN @TemporaryPassword = 1
+                    THEN @FechaExpiracionPasswordTemporal
+                ELSE NULL
+            END
     WHERE
-        Id = @Id
-        AND Estado = 1;
-END;
+        Id = @UsuarioId
+        AND Estado = 1
+        AND
+        (
+            @TemporaryPassword = 1
+            OR TemporaryPassword = 0
+            OR
+            (
+                TemporaryPassword = 1
+                AND FechaExpiracionPasswordTemporal IS NOT NULL
+                AND FechaExpiracionPasswordTemporal >= SYSUTCDATETIME()
+            )
+        );
+
+    SELECT @@ROWCOUNT;
+END
 GO
 
 ----------------------------------------------------------
@@ -515,8 +523,7 @@ CREATE OR ALTER PROCEDURE sp_modificar_cita
 (
     @Id INT,
     @UsuarioId INT,
-    @FechaHoraInicio DATETIME2,
-    @FechaHoraFin DATETIME2
+    @FechaHoraInicio DATETIME2
 )
 AS
 BEGIN
@@ -525,6 +532,10 @@ BEGIN
     SET DATEFIRST 1;
 
     BEGIN TRY
+
+        -- La cita tiene duracion fija en esta version inicial
+        DECLARE @FechaHoraFin DATETIME2 =
+            DATEADD(MINUTE, 39, @FechaHoraInicio);
 
         DECLARE @ProfesionalMedicoId INT;
 
@@ -537,13 +548,6 @@ BEGIN
         IF @ProfesionalMedicoId IS NULL
             THROW 50005, 'Cita no encontrada, no le pertenece, o ya no se puede modificar.', 1;
 
-        -- Validación de antelación: al menos 24 horas y máximo 60 días desde ahora
-        IF @FechaHoraInicio < DATEADD(HOUR, 24, GETDATE())
-            THROW 50006, 'La fecha/hora de inicio debe ser al menos 24 horas en el futuro.', 1;
-
-        IF @FechaHoraInicio > DATEADD(DAY, 60, GETDATE())
-            THROW 50007, 'La fecha/hora de inicio no puede ser mayor a 60 días desde ahora.', 1;
-
         DECLARE @DiaSemana TINYINT = DATEPART(WEEKDAY, @FechaHoraInicio);
         DECLARE @HoraInicioSolicitada TIME = CAST(@FechaHoraInicio AS TIME);
         DECLARE @HoraFinSolicitada TIME = CAST(@FechaHoraFin AS TIME);
@@ -555,7 +559,6 @@ BEGIN
               AND DiaSemana = @DiaSemana
               AND Estado = 1
               AND HoraInicio <= @HoraInicioSolicitada
-              AND HoraFin >= @HoraFinSolicitada
         )
             THROW 50003, 'El profesional no atiende en ese día/horario.', 1;
 
@@ -622,5 +625,180 @@ BEGIN
     WHERE Id = @Id
       AND UsuarioId = @UsuarioId
       AND EstadoCita IN (1, 2);
+END
+GO
+
+
+----------------------------------------------------------
+-- Disponibilidad profesional medico 
+----------------------------------------------------------
+
+CREATE OR ALTER PROCEDURE sp_disponibilidad_profesional
+(
+    @ProfesionalMedicoId INT,
+    @FechaInicio DATE,
+    @FechaFin DATE
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET DATEFIRST 1;
+
+    CREATE TABLE #Disponibilidad
+    (
+        Fecha DATE NOT NULL,
+        DiaSemana INT NOT NULL,
+        HoraInicio TIME NOT NULL,
+        HoraFin TIME NOT NULL,
+        Disponible BIT NOT NULL
+    );
+
+    /*
+        Cargamos únicamente las citas del profesional
+        dentro del rango solicitado.
+
+        Así evitamos consultar CitaMedica una vez
+        por cada bloque de 40 minutos.
+    */
+    CREATE TABLE #Citas
+    (
+        FechaHoraInicio DATETIME NOT NULL,
+        FechaHoraFin DATETIME NOT NULL
+    );
+
+    INSERT INTO #Citas
+    (
+        FechaHoraInicio,
+        FechaHoraFin
+    )
+    SELECT
+        FechaHoraInicio,
+        FechaHoraFin
+    FROM CitaMedica
+    WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+      AND EstadoCita IN (1, 2)
+      AND FechaHoraInicio < DATEADD(DAY, 1, CAST(@FechaFin AS DATETIME))
+      AND FechaHoraFin > CAST(@FechaInicio AS DATETIME);
+
+    CREATE INDEX IX_Citas_FechaHora
+        ON #Citas (FechaHoraInicio, FechaHoraFin);
+
+
+    DECLARE @FechaActual DATE = @FechaInicio;
+
+    DECLARE @HoraInicio TIME;
+    DECLARE @HoraFin TIME;
+    DECLARE @HoraActual TIME;
+
+    DECLARE @SlotInicio DATETIME;
+    DECLARE @SlotFin DATETIME;
+
+
+    WHILE @FechaActual <= @FechaFin
+    BEGIN
+
+        /*
+            MUY IMPORTANTE:
+            Se limpian las variables antes de buscar el horario.
+
+            Si este día no tiene horario, ambas quedan NULL
+            y NO se reutiliza el horario del día anterior.
+        */
+        SET @HoraInicio = NULL;
+        SET @HoraFin = NULL;
+
+        SELECT TOP 1
+            @HoraInicio = HoraInicio,
+            @HoraFin = HoraFin
+        FROM HorarioProfesional
+        WHERE ProfesionalMedicoId = @ProfesionalMedicoId
+          AND DiaSemana = DATEPART(WEEKDAY, @FechaActual)
+          AND Estado = 1
+        ORDER BY HoraInicio;
+
+
+        /*
+            Solo generamos disponibilidad si existe
+            un horario para ese día.
+        */
+        IF @HoraInicio IS NOT NULL
+           AND @HoraFin IS NOT NULL
+           AND @HoraInicio < @HoraFin
+        BEGIN
+
+            SET @HoraActual = @HoraInicio;
+
+            WHILE DATEADD(MINUTE, 40, @HoraActual) <= @HoraFin
+            BEGIN
+
+                /*
+                    Convertimos el bloque actual a DATETIME
+                    para poder comprobar traslapes directamente
+                    contra FechaHoraInicio / FechaHoraFin.
+                */
+                SET @SlotInicio =
+                    DATEADD(
+                        MINUTE,
+                        DATEDIFF(MINUTE, CAST('00:00:00' AS TIME), @HoraActual),
+                        CAST(@FechaActual AS DATETIME)
+                    );
+
+                SET @SlotFin =
+                    DATEADD(MINUTE, 40, @SlotInicio);
+
+
+                INSERT INTO #Disponibilidad
+                (
+                    Fecha,
+                    DiaSemana,
+                    HoraInicio,
+                    HoraFin,
+                    Disponible
+                )
+                VALUES
+                (
+                    @FechaActual,
+                    DATEPART(WEEKDAY, @FechaActual),
+                    @HoraActual,
+                    DATEADD(MINUTE, 40, @HoraActual),
+
+                    CASE
+                        WHEN EXISTS
+                        (
+                            SELECT 1
+                            FROM #Citas C
+                            WHERE C.FechaHoraInicio < @SlotFin
+                              AND C.FechaHoraFin > @SlotInicio
+                        )
+                        THEN 0
+                        ELSE 1
+                    END
+                );
+
+
+                SET @HoraActual =
+                    DATEADD(MINUTE, 40, @HoraActual);
+
+            END
+        END
+
+
+        SET @FechaActual =
+            DATEADD(DAY, 1, @FechaActual);
+
+    END;
+
+
+    SELECT
+        Fecha,
+        DiaSemana,
+        HoraInicio,
+        HoraFin,
+        Disponible
+    FROM #Disponibilidad
+    ORDER BY
+        Fecha,
+        HoraInicio;
+
 END
 GO

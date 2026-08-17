@@ -3,34 +3,109 @@
 <section class="py-5">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-clinic text-white">
-                        <h5 class="mb-0">Modificar cita con @ViewBag.ProfesionalMedico</h5>
+            <div class="col-lg-10">
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+
+                    <div class="card-header bg-clinic text-white border-0 py-4 px-4">
+                        <h5 class="mb-0 fw-semibold">Confirmar cambio de cita</h5>
                     </div>
-                    <div class="card-body p-4">
+
+                    <div class="card-body p-4 p-md-5">
+
                         @if (ViewBag.Mensaje != null)
                         {
-                            <div class="alert alert-danger">@ViewBag.Mensaje</div>
+                            <div class="alert alert-danger rounded-3">
+                                @ViewBag.Mensaje
+                            </div>
                         }
+
+                        <div class="mb-4 pb-3 border-bottom">
+                            <div class="text-muted small text-uppercase mb-1" style="letter-spacing:.05em;">
+                                Profesional médico
+                            </div>
+                            <div class="fw-semibold fs-5 text-dark">
+                                @ViewBag.ProfesionalMedico
+                            </div>
+                        </div>
+
                         <form method="post" class="row g-3">
-                            <input type="hidden" asp-for="CitaId" />
-                            <div class="col-md-6">
-                                <label class="form-label">Nueva fecha</label>
-                                <input asp-for="Fecha" type="date" class="form-control"
-                                       min="@DateTime.Now.AddHours(24).ToString("yyyy-MM-dd")"
-                                       max="@DateTime.Now.AddDays(60).ToString("yyyy-MM-dd")" />
-                                <div class="form-text text-muted small">Las citas deben solicitarse con al menos 24 horas de antelación y hasta 60 días.</div>
-                                <span asp-validation-for="Fecha" class="text-danger small"></span>
+                            <div class="modificar-info-usuario">
+                                <div class="col-md-6">
+                                    <label asp-for="NombrePaciente" class="form-label"></label>
+                                    <input asp-for="NombrePaciente" class="form-control" readonly />
+                                    <span asp-validation-for="NombrePaciente" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="IdentificacionPaciente" class="form-label"></label>
+                                    <input asp-for="IdentificacionPaciente" class="form-control" readonly />
+                                    <span asp-validation-for="IdentificacionPaciente" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-12">
+                                    <label asp-for="Motivo" class="form-label"></label>
+                                    <textarea asp-for="Motivo" class="form-control" rows="3" readonly></textarea>
+                                    <span asp-validation-for="Motivo" class="text-danger small"></span>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Nueva hora</label>
-                                <input asp-for="Hora" type="time" class="form-control" />
-                                <span asp-validation-for="Hora" class="text-danger small"></span>
+
+                            <div class="row mt-2 g-3 align-items-stretch">
+
+                                <div class="col-md-5">
+                                    <div class="border rounded-4 p-3 h-100 bg-light d-flex flex-column justify-content-center">
+                                        <div class="text-muted small text-uppercase mb-2" style="letter-spacing:.05em;">
+                                            Cita actual
+                                        </div>
+                                        <div class="mb-1 text-secondary">
+                                            @Model.FechaOriginal.ToString("dd MMM yyyy")
+                                        </div>
+                                        <div class="text-secondary">
+                                            @Model.HoraOriginal.ToString(@"hh\:mm")
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-2 d-flex align-items-center justify-content-center">
+                                    <span class="fs-3 text-clinic d-none d-md-inline">&rarr;</span>
+                                    <span class="fs-3 text-clinic d-md-none">&darr;</span>
+                                </div>
+
+                                <div class="col-md-5">
+                                    <div class="border rounded-4 p-3 h-100 d-flex flex-column justify-content-center" style="border-color:var(--bs-clinic,#0d6efd)!important; background-color:rgba(13,110,253,.05);">
+                                        <div class="text-clinic small text-uppercase mb-2 fw-semibold" style="letter-spacing:.05em;">
+                                            Nueva cita
+                                        </div>
+                                        <div class="mb-1 fw-semibold text-dark">
+                                            @Model.Fecha.ToString("dd MMM yyyy")
+                                        </div>
+                                        <div class="fw-semibold text-dark">
+                                            @Model.Hora.ToString(@"hh\:mm")
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div class="col-12 d-flex justify-content-between">
-                                <a asp-action="Index" class="btn btn-link">&larr; Cancelar y volver</a>
-                                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+
+                            <p class="text-muted small mt-4 mb-0">
+                                Verifica los datos antes de confirmar el cambio de tu cita.
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                                <a asp-action="Calendario"
+                                   asp-controller="Profesionales"
+                                   asp-route-citaId="@Model.CitaId"
+                                   asp-route-profesionalId="@Model.ProfesionalId"
+                                   class="btn btn-outline-secondary rounded-pill px-4">
+                                    Regresar
+                                </a>
+
+                                <input type="hidden" asp-for="CitaId" />
+                                <input type="hidden" asp-for="Fecha" />
+                                <input type="hidden" asp-for="Hora" />
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                    Confirmar cambio
+                                </button>
+
                             </div>
                         </form>
                     </div>

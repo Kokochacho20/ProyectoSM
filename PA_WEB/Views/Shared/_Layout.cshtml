@@ -28,7 +28,7 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/iconify-icons.css" />
-    <link rel="stylesheet" href="~/css/core.css" />
+    <link rel="stylesheet" href="~/css/core.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/perfect-scrollbar.css" />
     <link rel="stylesheet" href="~/css/pages/page-auth.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -82,9 +82,9 @@
                     </li>
 
                     <li class="menu-item">
-                        <a asp-action="Profesionales" asp-controller="Citas" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-calendar-plus"></i>
-                            <div class="text-truncate">Agendar cita</div>
+                        <a asp-action="Profesionales" asp-controller="Profesionales" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-user"></i>
+                            <div class="text-truncate">Profesionales</div>
                         </a>
                     </li>
 
@@ -165,12 +165,12 @@
     </div>
 
     <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/js/popper.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/perfect-scrollbar.js"></script>
     <script src="~/js/menu.js"></script>
     <script src="~/js/main.js"></script>
     <script src="~/js/citas.js" asp-append-version="true"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
 </body>

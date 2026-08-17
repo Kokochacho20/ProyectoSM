@@ -8,93 +8,111 @@
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-9">
-
                 <div class="clinic-card">
                     <div class="card-header bg-clinic p-4 text-white">
                         <h4 class="mb-1 text-white">Agendar cita médica</h4>
                         <small class="opacity-75">
-                            Profesional: @Model.ProfesionalMedicoNombre
+                            Complete los datos del paciente para solicitar la cita.
                         </small>
                     </div>
 
                     <div class="card-body p-4">
-
                         @if (ViewBag.Mensaje != null)
                         {
-                            <div class="alert alert-danger" role="alert">
-                                @ViewBag.Mensaje
-                            </div>
+                            <div class="alert alert-danger" role="alert">@ViewBag.Mensaje</div>
                         }
 
                         <form asp-action="Crear" asp-controller="Citas" method="post" class="row g-3">
+
+                            <div class="border rounded-3 p-3 mb-4">
+                                <h6 class="fw-semibold mb-3">Información de la consulta</h6>
+
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted">Profesional médico</label>
+                                        <input type="text" class="form-control bg-light text-muted"
+                                               value="@Model.ProfesionalMedicoNombre" readonly />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted">Fecha de consulta</label>
+                                        <input type="text" class="form-control bg-light text-muted"
+                                               value="@Model.Fecha.ToString("dd/MM/yyyy")" readonly />
+                                        <input type="hidden" asp-for="Fecha" />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label text-muted">Hora de consulta</label>
+                                        <input type="text" class="form-control bg-light text-muted"
+                                               value="@Model.Hora" readonly />
+                                        <input type="hidden" asp-for="Hora" />
+                                    </div>
+                                </div>
+
+                                <div class="mt-3">
+                                    <a asp-controller="Profesionales"
+                                       asp-action="Calendario"
+                                       asp-route-profesionalId="@Model.ProfesionalMedicoId"
+                                       asp-route-fecha="@Model.Fecha.ToString("yyyy-MM-dd")"
+                                       asp-route-hora="@Model.Hora"
+                                       class="btn btn-outline-secondary">
+                                        <i class="bx bx-calendar me-1"></i>
+                                        Cambiar horario
+                                    </a>
+                                </div>
+                            </div>
 
                             <input type="hidden" asp-for="ProfesionalMedicoId" />
                             <input type="hidden" asp-for="ProfesionalMedicoNombre" />
 
                             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                            <div class="col-md-6">
-                                <label asp-for="Fecha" class="form-label">Fecha</label>
-                                <input asp-for="Fecha" type="date" class="form-control" />
-                                <span asp-validation-for="Fecha" class="text-danger small"></span>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label asp-for="Hora" class="form-label">Hora</label>
-                                <input asp-for="Hora" type="time" class="form-control" />
-                                <span asp-validation-for="Hora" class="text-danger small"></span>
-                            </div>
-
                             <div class="col-12">
                                 <div class="form-check">
-                                    <input asp-for="EsParaOtraPersona"
-                                           class="form-check-input"
-                                           type="checkbox"
-                                           id="esParaOtraPersona" />
-
-                                    <label class="form-check-label" for="esParaOtraPersona">
+                                    <input asp-for="EsParaOtraPersona" class="form-check-input" id="esParaOtraPersona" />
+                                    <label asp-for="EsParaOtraPersona" class="form-check-label">
                                         Es para otra persona
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="NombrePaciente" class="form-label">Nombre del paciente</label>
-                                <input asp-for="NombrePaciente" class="form-control" id="NombrePaciente" />
+                                <label asp-for="NombrePaciente" class="form-label"></label>
+                                <input asp-for="NombrePaciente" class="form-control" />
                                 <span asp-validation-for="NombrePaciente" class="text-danger small"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="IdentificacionPaciente" class="form-label">Identificación</label>
-                                <input asp-for="IdentificacionPaciente" class="form-control" id="IdentificacionPaciente" />
+                                <label asp-for="IdentificacionPaciente" class="form-label"></label>
+                                <input asp-for="IdentificacionPaciente" class="form-control" />
                                 <span asp-validation-for="IdentificacionPaciente" class="text-danger small"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="FechaNacimientoPaciente" class="form-label">Fecha de nacimiento</label>
-                                <input asp-for="FechaNacimientoPaciente" type="date" class="form-control" id="FechaNacimientoPaciente" />
+                                <label asp-for="FechaNacimientoPaciente" class="form-label"></label>
+                                <input asp-for="FechaNacimientoPaciente" type="date" class="form-control" />
                                 <span asp-validation-for="FechaNacimientoPaciente" class="text-danger small"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="CorreoPaciente" class="form-label">Correo</label>
-                                <input asp-for="CorreoPaciente" type="email" class="form-control" id="CorreoPaciente" />
+                                <label asp-for="CorreoPaciente" class="form-label"></label>
+                                <input asp-for="CorreoPaciente" type="email" class="form-control" />
                                 <span asp-validation-for="CorreoPaciente" class="text-danger small"></span>
                             </div>
 
                             <div class="col-md-6">
-                                <label asp-for="TelefonoPaciente" class="form-label">Teléfono</label>
-                                <input asp-for="TelefonoPaciente" class="form-control" id="TelefonoPaciente" />
+                                <label asp-for="TelefonoPaciente" class="form-label"></label>
+                                <input asp-for="TelefonoPaciente" class="form-control" />
                                 <span asp-validation-for="TelefonoPaciente" class="text-danger small"></span>
                             </div>
 
                             <div class="col-12">
-                                <label asp-for="Motivo" class="form-label">Motivo / notas</label>
+                                <label asp-for="Motivo" class="form-label"></label>
                                 <textarea asp-for="Motivo" class="form-control" rows="3"></textarea>
                                 <span asp-validation-for="Motivo" class="text-danger small"></span>
                             </div>
 
-                            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                            <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 mt-4">
                                 <a asp-controller="Home" asp-action="Inicio" class="btn btn-outline-secondary">
                                     &larr; Volver
                                 </a>
@@ -103,12 +121,9 @@
                                     Solicitar cita
                                 </button>
                             </div>
-
                         </form>
-
                     </div>
                 </div>
-
             </div>
         </div>
     </div>

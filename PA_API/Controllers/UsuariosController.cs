@@ -81,7 +81,7 @@ namespace PA_API.Controllers
                     "Token inválido o sesión no autorizada."));
             }
 
-            request.Id = usuarioId;
+            request.UsuarioId = usuarioId;
 
             var result = await usuarioService.ActualizarContrasena(request);
             return StatusCode(result.StatusCode, result);

@@ -240,7 +240,7 @@ namespace PA_API.Services
                     StoreProceduresConstants.sp_actualizar_contrasena,
                     new
                     {
-                        usuario.Id,
+                        UsuarioId = usuario.Id,
                         PasswordHash = nuevoHash,
                         TemporaryPassword = true,
                         FechaExpiracionPasswordTemporal = fechaExpiracion
@@ -289,7 +289,7 @@ namespace PA_API.Services
                     StoreProceduresConstants.sp_actualizar_contrasena,
                     new
                     {
-                        request.Id,
+                        request.UsuarioId,
                         PasswordHash = nuevoHash,
                         TemporaryPassword = false,
                         FechaExpiracionPasswordTemporal = (DateTime?)null

@@ -36,7 +36,7 @@ namespace PA_API.Controllers
         [ProducesResponseType(typeof(ResultDto<List<CitaResponseDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> ObtenerCitasAsync([FromQuery] int? usuarioId)
+        public async Task<IActionResult> ObtenerCitasAsync()
         {
             var usuarioIdToken = utilesService.ObtenerUsuarioIdToken();
 

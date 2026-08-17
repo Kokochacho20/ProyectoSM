@@ -8,6 +8,7 @@
 
         public const string sp_profesional_buscar = "sp_profesional_buscar";
         public const string sp_obtener_profesional_por_id = "sp_obtener_profesional_por_id";
+        public const string sp_disponibilidad_profesional = "sp_disponibilidad_profesional";
 
         public const string sp_usuarios_lista = "sp_usuarios_lista";
         public const string sp_usuario_obtener = "sp_usuario_obtener";

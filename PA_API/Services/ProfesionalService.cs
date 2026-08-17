@@ -10,6 +10,7 @@ namespace PA_API.Services
     {
         Task<ResultDto<ProfesionalMedicoDto>> ObtenerProfesionalPorIdAsync(int profesionalId);
         Task<ResultDto<List<ProfesionalMedicoDto>>> BuscarAsync(BuscarProfesionalesQueryDto filtro);
+        Task<List<DisponibilidadSlotDto>> ObtenerDisponibilidadAsync(int profesionalId, DateTime inicio, DateTime fin);
     }
 
     public class ProfesionalService(IConfiguration configuration, ILogger<ProfesionalService> logger) : IProfesionalService
@@ -38,7 +39,6 @@ namespace PA_API.Services
             }
         }
 
-
         public async Task<ResultDto<ProfesionalMedicoDto>> ObtenerProfesionalPorIdAsync(int profesionalId)
         {
             try
@@ -58,6 +58,31 @@ namespace PA_API.Services
             catch (Exception ex)
             {
                 logger.LogError(ex, "Hubo un error al buscar el profesional con Id={profesionalId}", profesionalId);
+                throw;
+            }
+        }
+
+
+        public async Task<List<DisponibilidadSlotDto>> ObtenerDisponibilidadAsync(int profesionalId, DateTime inicio, DateTime fin)
+        {
+            try
+            {
+                using IDbConnection conexion = new SqlConnection(_connectionString);
+                var result = await conexion.QueryAsync<DisponibilidadSlotDto>(
+                    StoreProceduresConstants.sp_disponibilidad_profesional,
+                    new
+                    {
+                        ProfesionalMedicoId = profesionalId,
+                        FechaInicio = inicio.Date,
+                        FechaFin = fin.Date
+                    },
+                    commandType: CommandType.StoredProcedure);
+
+                return result.ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Hubo un error al intentar obtener la disponibilidad del profesional.");
                 throw;
             }
         }
