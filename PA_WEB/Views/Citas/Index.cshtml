@@ -56,6 +56,11 @@
                         <tbody>
                             @foreach (var cita in Model)
                             {
+                                @if (cita.FechaHoraInicio <= DateTime.Now)
+                                {
+                                    cita.EstadoCita = EstadoCitaModel.Finalizada;
+                                }
+
                                 var badge = cita.EstadoCita switch
                                 {
                                     PA_WEB.Models.EstadoCitaModel.Pendiente => "warning",
@@ -66,67 +71,122 @@
 
                                 <tr>
                                     <td class="fw-semibold">@cita.ProfesionalMedico</td>
-                                    <td>@cita.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                    <td>
+                                        @cita.FechaHoraInicio.ToString("dd/MM/yyyy HH:mm")
+                                    </td>
+
                                     <td>
                                         <span class="badge bg-@badge">
                                             @cita.EstadoCita
                                         </span>
                                     </td>
+
                                     <td>@cita.Motivo</td>
+
                                     <td class="text-end">
                                         @if (cita.EstadoCita == PA_WEB.Models.EstadoCitaModel.Pendiente ||
                                              cita.EstadoCita == PA_WEB.Models.EstadoCitaModel.Confirmada)
                                         {
-                                            <a class="btn btn-sm btn-outline-primary"
-                                               asp-action="Modificar"
+                                            <a class="btn btn-sm btn-outline-primary mb-1"
+                                               asp-action="Calendario"
+                                               asp-controller="Profesionales"
                                                asp-route-citaId="@cita.Id">
                                                 Modificar
                                             </a>
 
                                             <button type="button"
-                                                    class="btn btn-sm btn-outline-danger"
+                                                    class="btn btn-sm btn-outline-danger mb-1"
                                                     data-bs-toggle="modal"
-                                                    data-bs-target="#modalCancelar@cita.Id">
+                                                    data-bs-target="#modalCancelar"
+                                                    data-cita-id="@cita.Id"
+                                                    data-profesional="@cita.ProfesionalMedico">
                                                 Cancelar
                                             </button>
                                         }
                                     </td>
                                 </tr>
-
-                                <div class="modal fade" id="modalCancelar@cita.Id" tabindex="-1" aria-labelledby="modalCancelarLabel@cita.Id" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <h5 class="modal-title" id="modalCancelarLabel@cita.Id">
-                                                    Cancelar cita
-                                                </h5>
-                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                            </div>
-
-                                            <div class="modal-body">
-                                                ¿Seguro que desea cancelar esta cita con <strong>@cita.ProfesionalMedico</strong>?
-                                            </div>
-
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                                                    Volver
-                                                </button>
-
-                                                <form method="post" asp-action="Cancelar" asp-route-citaId="@cita.Id">
-                                                    <button type="submit" class="btn btn-danger">
-                                                        Sí, cancelar
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
                             }
                         </tbody>
                     </table>
+
+                    <div class="modal fade"
+                         id="modalCancelar"
+                         tabindex="-1"
+                         aria-labelledby="modalCancelarLabel"
+                         aria-hidden="true">
+
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="modalCancelarLabel">
+                                        Cancelar cita
+                                    </h5>
+
+                                    <button type="button"
+                                            class="btn-close"
+                                            data-bs-dismiss="modal"
+                                            aria-label="Cerrar">
+                                    </button>
+                                </div>
+
+                                <div class="modal-body">
+                                    ¿Seguro que desea cancelar esta cita con
+                                    <strong id="modalProfesional"></strong>?
+                                </div>
+
+                                <div class="modal-footer">
+
+                                    <button type="button"
+                                            class="btn btn-outline-secondary"
+                                            data-bs-dismiss="modal">
+                                        Volver
+                                    </button>
+
+                                    <form method="post"
+                                          asp-action="Cancelar"
+                                          id="formCancelar">
+
+                                        <input type="hidden"
+                                               name="citaId"
+                                               id="modalCitaId" />
+
+                                        <button type="submit"
+                                                class="btn btn-danger">
+                                            Sí, cancelar
+                                        </button>
+
+                                    </form>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         }
 
     </div>
 </section>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const modal = document.getElementById("modalCancelar");
+
+        modal.addEventListener("show.bs.modal", function (event) {
+
+            const button = event.relatedTarget;
+
+            const citaId = button.getAttribute("data-cita-id");
+            const profesional = button.getAttribute("data-profesional");
+
+            document.getElementById("modalCitaId").value = citaId;
+            document.getElementById("modalProfesional").textContent = profesional;
+
+            console.log("Cita a cancelar:", citaId);
+        });
+
+    });
+</script>

@@ -22609,7 +22609,7 @@ li:not(:first-child) .dropdown-item, .dropdown-menu .dropdown-item:not(:first-ch
   /* Menu */
   .layout-menu-fixed .layout-menu,
   .layout-menu-fixed-offcanvas .layout-menu {
-    position: fixed;
+    position: relative;
     inset-block: 0;
     inset-inline-start: 0;
     margin-inline: 0 !important;
@@ -22682,7 +22682,7 @@ html:not(.layout-footer-fixed) .content-wrapper {
   /* Fix navbar within Navbar Full layout in fixed mode */
   .layout-menu-fixed .layout-navbar-full .layout-navbar,
   .layout-menu-fixed-offcanvas .layout-navbar-full .layout-navbar {
-    position: fixed;
+    position: relative;
     inset-block-start: 0;
     inset-inline: 0;
   }

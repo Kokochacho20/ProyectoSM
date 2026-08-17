@@ -15,17 +15,17 @@ GO
 -- Paciente que se registra y reserva citas.
 -- =========================================================
 CREATE TABLE Usuario (
-    Id                  INT IDENTITY(1,1)  NOT NULL,
-    Identificacion      NVARCHAR(20)       NOT NULL,
-    NombreCompleto      NVARCHAR(200)      NOT NULL,
-    CorreoElectronico   NVARCHAR(200)      NOT NULL,
-    Telefono            NVARCHAR(20)       NOT NULL,
-    FechaNacimiento     DATE               NOT NULL,
-    PasswordHash        NVARCHAR(300)      NOT NULL,
-    TemporaryPassword    BIT                NOT NULL DEFAULT 0,
-    FechaRegistro       DATETIME2          NOT NULL DEFAULT
-    SYSUTCDATETIME(),
-    Estado              BIT                NOT NULL DEFAULT 1,
+    Id                              INT IDENTITY(1,1)  NOT NULL,
+    Identificacion                  NVARCHAR(20)       NOT NULL,
+    NombreCompleto                  NVARCHAR(200)      NOT NULL,
+    CorreoElectronico               NVARCHAR(200)      NOT NULL,
+    Telefono                        NVARCHAR(20)       NOT NULL,
+    FechaNacimiento                 DATE               NOT NULL,
+    PasswordHash                    NVARCHAR(300)      NOT NULL,
+    TemporaryPassword               BIT                NOT NULL DEFAULT 0,
+    FechaExpiracionPasswordTemporal DATETIME2          NULL,
+    FechaRegistro                   DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+    Estado                          BIT                NOT NULL DEFAULT 1,
 
     CONSTRAINT PK_Usuario PRIMARY KEY (Id),
     CONSTRAINT UQ_Usuario_Correo UNIQUE (CorreoElectronico),

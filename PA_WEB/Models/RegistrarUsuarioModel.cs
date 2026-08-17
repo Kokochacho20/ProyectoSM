@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace PA_WEB.Models
 {
@@ -11,6 +12,7 @@ namespace PA_WEB.Models
 
         [Required(ErrorMessage = "El nombre completo es obligatorio")]
         [Display(Name = "Nombre Completo")]
+        [JsonPropertyName("NombreCompleto")]
         [StringLength(100, ErrorMessage = "El nombre completo no puede superar los 100 caracteres")]
         public string Nombre { get; set; } = string.Empty;
 

@@ -4,6 +4,7 @@ namespace PA_WEB.Models
 {
     public class CrearCitaModel : IValidatableObject
     {
+        public int UsuarioId { get; set; }
         public int ProfesionalMedicoId { get; set; }
 
         public string ProfesionalMedicoNombre { get; set; } = string.Empty;
@@ -17,6 +18,9 @@ namespace PA_WEB.Models
         [DataType(DataType.Time)]
         [Display(Name = "Hora")]
         public TimeSpan Hora { get; set; } = new TimeSpan(8, 0, 0);
+
+        public DateTime FechaHoraInicio => Fecha.Date + Hora;
+
 
         [Display(Name = "Es para otra persona")]
         public bool EsParaOtraPersona { get; set; }
@@ -43,6 +47,8 @@ namespace PA_WEB.Models
         public string TelefonoPaciente { get; set; } = string.Empty;
 
         [Display(Name = "Motivo / notas")]
+        [Required(ErrorMessage = "El campo motivo es obligatorio.")]
+        [MinLength(10, ErrorMessage = "El motivo debe tener al menos 10 caracteres.")]
         public string Motivo { get; set; } = string.Empty;
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

@@ -189,6 +189,14 @@ a {
     padding: 18px;
 }
 
+.clinic-profesional-box {
+    background: #fff;
+    border: 1px solid rgba(105, 108, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(105, 108, 255, 0.08);
+    border-radius: 14px;
+    padding: 18px;
+}
+
 .clinic-empty-state {
     border-radius: 16px;
     background: #ffffff;
@@ -329,4 +337,183 @@ a {
 
 footer.content-footer {
     margin-top: 18px;
+}
+
+
+
+.modificar-info-usuario {
+    cursor: not-allowed !important
+}
+
+
+.disponibilidad-calendario {
+    .card {
+        margin-top: 15px;
+        padding: 15px;
+    }
+
+    .cal-day, .cal-day-empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 500;
+        color: #1f2937;
+        font-size: .95rem;
+    }
+
+        .cal-day.past,
+        .cal-day.unavailable {
+            background: #f6f6f4;
+            color: #b8b8b0;
+            text-decoration: line-through;
+            pointer-events: none;
+        }
+
+        .cal-day.available {
+            background: transparent;
+            color: #1f2937;
+            cursor: pointer;
+        }
+
+            .cal-day.available:hover {
+                background: #eef6ff;
+            }
+
+        .cal-day.selected {
+            background: #22392f;
+            color: #fff;
+            font-weight: 700;
+        }
+    /* Calendario */
+    .cal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .cal-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        text-transform: capitalize;
+    }
+
+    .cal-nav {
+        display: flex;
+        gap: .5rem;
+    }
+
+        .cal-nav a {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #374151;
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            font-size: 1.1rem;
+        }
+
+            .cal-nav a:hover {
+                background: #f3f4f6;
+            }
+
+            .cal-nav a.disabled {
+                pointer-events: none;
+                opacity: .35;
+            }
+
+    .cal-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: .5rem;
+        justify-items: center;
+    }
+
+    .cal-dow {
+        font-size: .75rem;
+        font-weight: 600;
+        color: #9ca3af;
+        text-align: center;
+        text-transform: uppercase;
+    }
+    /* Horarios */
+    .slot-title {
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .slot-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+    }
+
+    .slot {
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        padding: .55rem 1.1rem;
+        background: white;
+        color: #1f2937;
+        cursor: pointer;
+        font-size: .9rem;
+        font-family: monospace;
+    }
+
+        .slot:hover {
+            border-color: #22392f;
+        }
+
+        .slot.selected {
+            background: #22392f;
+            color: #fff;
+            border-color: #22392f;
+        }
+
+        .slot.disabled {
+            background: #f6f6f4;
+            color: #c9c9c0;
+            text-decoration: line-through;
+            pointer-events: none;
+            border-color: #eee;
+        }
+
+    .btn-continuar {
+        margin-top: 2rem;
+        background: #22392f;
+        color: #fff;
+        border: none;
+        padding: .8rem 1.6rem;
+        border-radius: 10px;
+        font-weight: 600;
+        float: right;
+        cursor: pointer;
+    }
+
+        .btn-continuar:disabled {
+            background-color: #e0e0e5;
+            color: #9999a1;
+            border: 1px solid #d2d2d8;
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+            pointer-events: none;
+        }
+
+    @media (max-width: 480px) {
+        .cal-day, .cal-day-empty {
+            width: 34px;
+            height: 34px;
+            font-size: .85rem;
+        }
+    }
 }

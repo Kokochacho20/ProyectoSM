@@ -55,7 +55,7 @@
                         Elija la especialidad para ver los profesionales disponibles y continuar con su cita.
                     </p>
 
-                    <form method="get" asp-controller="Citas" asp-action="Profesionales" class="row g-3">
+                    <form method="get" asp-controller="Profesionales" asp-action="Profesionales" class="row g-3">
                         <div class="col-12">
                             <label class="form-label fw-semibold">Especialidad</label>
 
@@ -64,7 +64,7 @@
                                     <i class="bx bx-briefcase-alt-2"></i>
                                 </span>
 
-                                <select name="especialidadId" class="form-select" required>
+                                <select name="especialidadId" class="form-select">
                                     <option value="">Seleccione una especialidad</option>
                                     @foreach (var especialidad in especialidades)
                                     {
