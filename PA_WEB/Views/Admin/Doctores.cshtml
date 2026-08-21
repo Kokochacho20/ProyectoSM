@@ -1,0 +1,155 @@
+﻿@model List<PA_WEB.Models.AdminDoctorModel>
+
+@{
+    ViewData["Title"] = "Doctores";
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-plus-medical"></i>
+                    SuperAdmin
+                </span>
+
+                <h3 class="clinic-title mb-1">Doctores registrados</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Consulte los profesionales médicos registrados y verifique si cuentan con usuario de acceso.
+                </p>
+            </div>
+
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+                &larr; Volver al dashboard
+            </a>
+        </div>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info shadow-sm">
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="clinic-info-box h-100">
+                    <small class="opacity-75">Total doctores</small>
+                    <h3 class="text-white mb-0">@Model.Count</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Con usuario creado</small>
+                    <h3 class="clinic-title mb-0">@Model.Count(x => x.TieneUsuario)</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Pendientes de usuario</small>
+                    <h3 class="clinic-title mb-0">@Model.Count(x => !x.TieneUsuario)</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="clinic-table-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="clinic-title mb-0">Listado de doctores</h5>
+                    <small class="text-muted">
+                        Información general de profesionales médicos.
+                    </small>
+                </div>
+
+                <span class="clinic-badge">
+                    Usuarios médicos
+                </span>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="clinic-empty-state">
+                    No hay doctores registrados en el sistema.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Doctor</th>
+                                <th>Código</th>
+                                <th>Contacto</th>
+                                <th>Precio</th>
+                                <th>Estado</th>
+                                <th>Usuario</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var doctor in Model)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@doctor.NombreCompleto</div>
+
+                                        @if (!string.IsNullOrWhiteSpace(doctor.Descripcion))
+                                        {
+                                            <small class="text-muted">@doctor.Descripcion</small>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-light text-primary border">
+                                            @doctor.CodigoMedico
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div>@doctor.CorreoElectronico</div>
+                                        <small class="text-muted">@doctor.Telefono</small>
+                                    </td>
+
+                                    <td>
+                                        ₡@doctor.PrecioConsulta.ToString("N2")
+                                    </td>
+
+                                    <td>
+                                        @if (doctor.Estado)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (doctor.TieneUsuario)
+                                        {
+                                            <div>
+                                                <span class="badge bg-primary">Usuario creado</span>
+                                            </div>
+                                            <small class="text-muted">@doctor.CorreoUsuario</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-warning">Pendiente</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+</section>

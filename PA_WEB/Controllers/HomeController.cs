@@ -5,9 +5,10 @@ using PA_WEB.Services;
 
 namespace PA_WEB.Controllers
 {
-    public class HomeController(IUsuarioService usuarioService, IProfesionalService profesionalService) : Controller
+    public class HomeController(
+        IUsuarioService usuarioService,
+        IProfesionalService profesionalService) : Controller
     {
-
         [HttpGet]
         public IActionResult Index(string? mensaje)
         {
@@ -22,7 +23,8 @@ namespace PA_WEB.Controllers
         [HttpPost]
         public async Task<IActionResult> IniciarSesion(InicioSesionModel model)
         {
-            if (string.IsNullOrWhiteSpace(model.CorreoElectronico) || string.IsNullOrWhiteSpace(model.Contrasenna))
+            if (string.IsNullOrWhiteSpace(model.CorreoElectronico) ||
+                string.IsNullOrWhiteSpace(model.Contrasenna))
             {
                 ViewBag.Mensaje = "Debe ingresar el correo electrónico y la contraseña.";
                 return View("Index", model);
@@ -30,9 +32,11 @@ namespace PA_WEB.Controllers
 
             try
             {
-                var response = await usuarioService.IniciarSesionAsync(model.CorreoElectronico, model.Contrasenna);
+                var response = await usuarioService.IniciarSesionAsync(
+                    model.CorreoElectronico,
+                    model.Contrasenna);
 
-                if (response != null && response.Success && response?.Data is not null)
+                if (response != null && response.Success && response.Data is not null)
                 {
                     var usuario = response.Data.Usuario;
 
@@ -44,13 +48,38 @@ namespace PA_WEB.Controllers
                     HttpContext.Session.SetString("FechaNacimientoUsuario", usuario.FechaNacimiento.ToString("yyyy-MM-dd"));
                     HttpContext.Session.SetString("Token", response.Data.Token);
 
+                    HttpContext.Session.SetInt32("RolId", usuario.RolId);
+                    HttpContext.Session.SetString("RolNombre", usuario.RolNombre);
+
+                    if (usuario.ProfesionalMedicoId.HasValue)
+                    {
+                        HttpContext.Session.SetInt32(
+                            "ProfesionalMedicoId",
+                            usuario.ProfesionalMedicoId.Value);
+                    }
+                    else
+                    {
+                        HttpContext.Session.Remove("ProfesionalMedicoId");
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(usuario.ProfesionalNombre))
+                    {
+                        HttpContext.Session.SetString(
+                            "ProfesionalNombre",
+                            usuario.ProfesionalNombre);
+                    }
+                    else
+                    {
+                        HttpContext.Session.Remove("ProfesionalNombre");
+                    }
+
                     if (response.Data.TemporaryPassword)
                     {
                         TempData["Mensaje"] = "Ingresó con una contraseña temporal. Debe actualizar su contraseña antes de continuar.";
                         return RedirectToAction("ActualizarContrasena", "Home");
                     }
 
-                    return RedirectToAction("Inicio", "Home");
+                    return RedireccionarSegunRol();
                 }
 
                 ViewBag.Mensaje = response?.Message ?? "No se pudo iniciar sesión. Verifique sus datos.";
@@ -113,12 +142,8 @@ namespace PA_WEB.Controllers
 
             try
             {
-                var request = new
-                {
-                    model.CorreoElectronico
-                };
-
-                var response = await usuarioService.RecuperarAccesoAsync(model.CorreoElectronico);
+                var response = await usuarioService.RecuperarAccesoAsync(
+                    model.CorreoElectronico);
 
                 if (response != null && response.Success)
                 {
@@ -163,13 +188,13 @@ namespace PA_WEB.Controllers
             try
             {
                 var response = await usuarioService.ActualizarContrasennaAsync(
-                    model.ContrasenaNueva, 
+                    model.ContrasenaNueva,
                     model.ConfirmarContrasenaNueva);
 
                 if (response != null && response.Success)
                 {
                     TempData["Mensaje"] = response.Message ?? "Contraseña actualizada correctamente.";
-                    return RedirectToAction("Inicio", "Home");
+                    return RedireccionarSegunRol();
                 }
 
                 ViewBag.Mensaje = response?.Message ?? "No se pudo actualizar la contraseña.";
@@ -204,6 +229,18 @@ namespace PA_WEB.Controllers
             HttpContext.Session.Clear();
             TempData["Mensaje"] = "Sesión cerrada correctamente.";
             return RedirectToAction("Index", "Home");
+        }
+
+        private IActionResult RedireccionarSegunRol()
+        {
+            var rolId = HttpContext.Session.GetInt32("RolId");
+
+            return rolId switch
+            {
+                1 => RedirectToAction("Index", "Admin"),
+                2 => RedirectToAction("Index", "Medico"),
+                _ => RedirectToAction("Inicio", "Home")
+            };
         }
     }
 }

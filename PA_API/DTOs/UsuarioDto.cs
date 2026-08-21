@@ -13,6 +13,14 @@
         public string Telefono { get; set; } = string.Empty;
 
         public DateTime FechaNacimiento { get; set; }
+
+        public int RolId { get; set; }
+
+        public string RolNombre { get; set; } = string.Empty;
+
+        public int? ProfesionalMedicoId { get; set; }
+
+        public string? ProfesionalNombre { get; set; }
     }
 
     public class UsuarioConContrasenaDto
@@ -38,5 +46,13 @@
         public DateTime FechaRegistro { get; set; }
 
         public bool Estado { get; set; }
+
+        public int RolId { get; set; }
+
+        public string RolNombre { get; set; } = string.Empty;
+
+        public int? ProfesionalMedicoId { get; set; }
+
+        public string? ProfesionalNombre { get; set; }
     }
 }

@@ -1,8 +1,71 @@
 ﻿@using Microsoft.AspNetCore.Http
+@using PA_WEB.Services
+@inject INotificacionService NotificacionService
 
 @{
     var nombreUsuario = Context.Session.GetString("NombreUsuario");
     var correoUsuario = Context.Session.GetString("CorreoUsuario");
+    var rolId = Context.Session.GetInt32("RolId") ?? 3;
+    var rolNombre = Context.Session.GetString("RolNombre");
+    var profesionalNombre = Context.Session.GetString("ProfesionalNombre");
+
+    var cantidadNotificacionesPendientes = 0;
+
+    if (Context.Session.GetInt32("UsuarioId") is not null)
+    {
+        try
+        {
+            var notificacionesPendientes = await NotificacionService.ObtenerNotificacionesAsync(true);
+            cantidadNotificacionesPendientes = notificacionesPendientes?.Data?.Count ?? 0;
+        }
+        catch
+        {
+            cantidadNotificacionesPendientes = 0;
+        }
+    }
+
+    var nombreMostrar = !string.IsNullOrWhiteSpace(profesionalNombre)
+        ? profesionalNombre
+        : nombreUsuario;
+
+    var etiquetaSistema = rolId switch
+    {
+        1 => "Panel Administrativo",
+        2 => "Panel Médico",
+        _ => "Sistema de Citas Médicas"
+    };
+
+    var inicioController = rolId switch
+    {
+        1 => "Admin",
+        2 => "Medico",
+        _ => "Home"
+    };
+
+    var inicioAction = rolId switch
+    {
+        1 => "Index",
+        2 => "Index",
+        _ => "Inicio"
+    };
+
+    var controllerActual = ViewContext.RouteData.Values["controller"]?.ToString();
+    var actionActual = ViewContext.RouteData.Values["action"]?.ToString();
+
+    bool MenuActivo(string controller, string? action = null)
+    {
+        if (!string.Equals(controllerActual, controller, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(action))
+        {
+            return true;
+        }
+
+        return string.Equals(actionActual, action, StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 <!doctype html>
@@ -28,7 +91,7 @@
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/iconify-icons.css" />
-    <link rel="stylesheet" href="~/css/core.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/core.css" />
     <link rel="stylesheet" href="~/css/perfect-scrollbar.css" />
     <link rel="stylesheet" href="~/css/pages/page-auth.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -43,9 +106,9 @@
 
             <aside id="layout-menu" class="layout-menu menu-vertical menu bg-white shadow-sm">
                 <div class="app-brand demo">
-                    <a asp-action="Inicio" asp-controller="Home" class="app-brand-link d-flex align-items-center">
+                    <a asp-action="@inicioAction" asp-controller="@inicioController" class="app-brand-link d-flex align-items-center">
                         <div class="app-brand-logo demo rounded text-white d-flex align-items-center justify-content-center"
-                             style="width:42px;height:42px;font-weight:700;background:linear-gradient(90deg,#696cff,#5db0ff);">
+                             style="width:42px;height:42px;font-weight:700;background:#696cff;">
                             SM
                         </div>
 
@@ -54,7 +117,7 @@
                         </span>
                     </a>
 
-                    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
+                    <a href="#" class="layout-menu-toggle menu-link text-large ms-auto d-xl-none">
                         <i class="bx bx-chevron-left d-block align-middle"></i>
                     </a>
                 </div>
@@ -63,36 +126,131 @@
                 <div class="menu-inner-shadow"></div>
 
                 <ul class="menu-inner py-1">
-                    <li class="menu-header small text-uppercase">
-                        <span class="menu-header-text">Principal</span>
-                    </li>
 
-                    <li class="menu-item">
-                        <a asp-action="Inicio" asp-controller="Home" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-calendar-plus"></i>
-                            <div class="text-truncate">Agendar cita</div>
-                        </a>
-                    </li>
+                    @if (rolId == 1)
+                    {
+                        <li class="menu-header small text-uppercase">
+                            <span class="menu-header-text">Administración</span>
+                        </li>
 
-                    <li class="menu-item">
-                        <a asp-action="Index" asp-controller="Citas" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-calendar"></i>
-                            <div class="text-truncate">Mis citas</div>
-                        </a>
-                    </li>
+                        <li class="menu-item @(MenuActivo("Admin", "Index") ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Admin" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-grid-alt"></i>
+                                <div class="text-truncate">Dashboard</div>
+                            </a>
+                        </li>
 
-                    <li class="menu-item">
-                        <a asp-action="Profesionales" asp-controller="Profesionales" class="menu-link">
-                            <i class="menu-icon tf-icons bx bx-user"></i>
-                            <div class="text-truncate">Profesionales</div>
-                        </a>
-                    </li>
+                        <li class="menu-item @(MenuActivo("Admin", "Usuarios") || MenuActivo("Admin", "EditarUsuario") ? "active" : "")">
+                            <a asp-action="Usuarios" asp-controller="Admin" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-user"></i>
+                                <div class="text-truncate">Usuarios</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Admin", "Doctores") ? "active" : "")">
+                            <a asp-action="Doctores" asp-controller="Admin" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-plus-medical"></i>
+                                <div class="text-truncate">Doctores</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Admin", "Citas") ? "active" : "")">
+                            <a asp-action="Citas" asp-controller="Admin" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-calendar-check"></i>
+                                <div class="text-truncate">Citas</div>
+                            </a>
+                        </li>
+                    }
+                    else if (rolId == 2)
+                    {
+                        <li class="menu-header small text-uppercase">
+                            <span class="menu-header-text">Médico</span>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Medico", "Index") && Context.Request.Query["estadoCita"].Count == 0 ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Medico" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-grid-alt"></i>
+                                <div class="text-truncate">Dashboard</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(Context.Request.Query["estadoCita"] == "1" ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Medico" asp-route-estadoCita="1" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-time-five"></i>
+                                <div class="text-truncate">Pendientes</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(Context.Request.Query["estadoCita"] == "2" ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Medico" asp-route-estadoCita="2" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-check-circle"></i>
+                                <div class="text-truncate">Aprobadas</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(Context.Request.Query["estadoCita"] == "4" ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Medico" asp-route-estadoCita="4" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-clipboard"></i>
+                                <div class="text-truncate">Finalizadas</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(Context.Request.Query["estadoCita"] == "3" ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Medico" asp-route-estadoCita="3" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-x-circle"></i>
+                                <div class="text-truncate">Canceladas</div>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="menu-header small text-uppercase">
+                            <span class="menu-header-text">Principal</span>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Home", "Inicio") ? "active" : "")">
+                            <a asp-action="Inicio" asp-controller="Home" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-calendar-plus"></i>
+                                <div class="text-truncate">Agendar cita</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Citas", "Index") || MenuActivo("Citas", "Modificar") || MenuActivo("Citas", "Crear") ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Citas" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-calendar"></i>
+                                <div class="text-truncate">Mis citas</div>
+                            </a>
+                        </li>
+
+                        <li class="menu-item @(MenuActivo("Profesionales", "Index") || MenuActivo("Profesionales", "Profesionales") ? "active" : "")">
+                            <a asp-action="Index" asp-controller="Profesionales" class="menu-link">
+                                <i class="menu-icon tf-icons bx bx-user"></i>
+                                <div class="text-truncate">Profesionales</div>
+                            </a>
+                        </li>
+                    }
 
                     <li class="menu-header small text-uppercase">
                         <span class="menu-header-text">Cuenta</span>
                     </li>
 
-                    <li class="menu-item">
+                    <li class="menu-item @(MenuActivo("Notificaciones", "Index") ? "active" : "")">
+                        <a asp-action="Index" asp-controller="Notificaciones" class="menu-link">
+                            <i class="menu-icon tf-icons bx bx-bell"></i>
+                            <div class="text-truncate">
+                                Notificaciones
+
+                                @if (cantidadNotificacionesPendientes > 0)
+                                {
+                                    <span class="badge rounded-pill bg-danger ms-2">
+                                        @cantidadNotificacionesPendientes
+                                    </span>
+                                }
+                            </div>
+                        </a>
+                    </li>
+
+                    <li class="menu-item @(MenuActivo("Home", "ActualizarContrasena") ? "active" : "")">
                         <a asp-action="ActualizarContrasena" asp-controller="Home" class="menu-link">
                             <i class="menu-icon tf-icons bx bx-lock"></i>
                             <div class="text-truncate">Actualizar contraseña</div>
@@ -105,6 +263,7 @@
                             <div class="text-truncate">Cerrar sesión</div>
                         </a>
                     </li>
+
                 </ul>
             </aside>
 
@@ -115,27 +274,50 @@
                     <div class="topbar-panel d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <div class="d-flex align-items-center gap-3">
                             <div class="layout-menu-toggle navbar-nav align-items-xl-center d-xl-none">
-                                <a class="nav-item nav-link px-0" href="javascript:void(0)">
+                                <a class="nav-item nav-link px-0" href="#">
                                     <i class="icon-base bx bx-menu icon-md"></i>
                                 </a>
                             </div>
 
                             <span class="clinic-badge">
-                                Sistema de Citas Médicas
+                                @etiquetaSistema
                             </span>
+
+                            @if (!string.IsNullOrWhiteSpace(rolNombre))
+                            {
+                                <span class="badge bg-light text-primary border">
+                                    @rolNombre
+                                </span>
+                            }
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(nombreUsuario))
-                        {
-                            <div class="text-end">
-                                <div class="fw-semibold text-dark">
-                                    @nombreUsuario
+                        <div class="d-flex align-items-center gap-3">
+                            <a asp-controller="Notificaciones"
+                               asp-action="Index"
+                               class="btn btn-sm btn-light position-relative border rounded-circle d-flex align-items-center justify-content-center"
+                               style="width:40px;height:40px;">
+                                <i class="bx bx-bell fs-5"></i>
+
+                                @if (cantidadNotificacionesPendientes > 0)
+                                {
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                        @cantidadNotificacionesPendientes
+                                    </span>
+                                }
+                            </a>
+
+                            @if (!string.IsNullOrWhiteSpace(nombreMostrar))
+                            {
+                                <div class="text-end">
+                                    <div class="fw-semibold text-dark">
+                                        @nombreMostrar
+                                    </div>
+                                    <small class="text-muted">
+                                        @correoUsuario
+                                    </small>
                                 </div>
-                                <small class="text-muted">
-                                    @correoUsuario
-                                </small>
-                            </div>
-                        }
+                            }
+                        </div>
                     </div>
                 </nav>
 
@@ -165,13 +347,15 @@
     </div>
 
     <script src="~/lib/jquery/dist/jquery.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/popper.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="~/js/perfect-scrollbar.js"></script>
     <script src="~/js/menu.js"></script>
     <script src="~/js/main.js"></script>
     <script src="~/js/citas.js" asp-append-version="true"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
     <script src="~/lib/jquery-validation-unobtrusive/dist/jquery.validate.unobtrusive.min.js"></script>
+
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
