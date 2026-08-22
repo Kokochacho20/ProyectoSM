@@ -1,15 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PA_WEB.Filters;
 using PA_WEB.Models;
 using PA_WEB.Services;
-using System.Net;
 
 namespace PA_WEB.Controllers
 {
-    public class ProfesionalesController(IProfesionalService profesionalService, ICitasService citaService) : Controller
+    [RequiereSesion]
+    public class ProfesionalesController(
+        IProfesionalService profesionalService,
+        ICitasService citaService) : Controller
     {
-
         [HttpGet]
-        public async Task<IActionResult> Profesionales(string? texto, int? especialidadId)
+        public async Task<IActionResult> Index(string? texto, int? especialidadId)
         {
             var especialidades = await profesionalService.ObtenerEspecialidadesAsync();
 
@@ -38,53 +40,56 @@ namespace PA_WEB.Controllers
             if (!response.Success || response.Data is null)
             {
                 ViewBag.Mensaje = response.Message ?? "No se pudieron cargar los profesionales.";
-                return View(new List<ProfesionalModel>());
+                return View("Profesionales", new List<ProfesionalModel>());
             }
 
-            return View(response.Data);
+            return View("Profesionales", response.Data);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Profesionales(string? texto, int? especialidadId)
+        {
+            return await Index(texto, especialidadId);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Calendario(
-        int profesionalId,
-        DateTime? mes,
-        DateTime? fecha,
-        int? citaId)
+            int profesionalId,
+            DateTime? mes,
+            DateTime? fecha,
+            int? citaId)
         {
             var hoy = DateTime.Today;
 
             ProfesionalModel? profesional;
             CitaModel? cita = null;
 
-            // =========================================================
-            // Cargar profesional y cita
-            // =========================================================
-
             if (citaId.HasValue)
             {
                 var response = await citaService.ObtenerCitaPorIdAsync(citaId.Value);
+
                 if (response?.Data is null)
                 {
                     TempData["Mensaje"] = "La cita no existe.";
                     return RedirectToAction("Index");
                 }
+
                 cita = response.Data;
                 profesionalId = cita.ProfesionalMedicoId;
             }
 
-            profesional = await profesionalService
-                .ObtenerProfesionalPorIdAsync(profesionalId);
+            profesional = await profesionalService.ObtenerProfesionalPorIdAsync(profesionalId);
 
-            if (profesional is null) return NotFound();
+            if (profesional is null)
+            {
+                return NotFound();
+            }
 
             if (cita is not null)
             {
                 fecha ??= cita.FechaHoraInicio.Date;
                 mes ??= cita.FechaHoraInicio;
             }
-
-            // =========================================================
-            // Mes que se está visualizando
-            // =========================================================
 
             var primerMesPermitido = new DateTime(hoy.Year, hoy.Month, 1);
 
@@ -93,29 +98,23 @@ namespace PA_WEB.Controllers
                 : primerMesPermitido;
 
             if (mesActual < primerMesPermitido)
+            {
                 mesActual = primerMesPermitido;
+            }
 
             var primerDiaMes = mesActual;
             var ultimoDiaMes = mesActual.AddMonths(1).AddDays(-1);
 
-            // =========================================================
-            // Disponibilidad
-            // =========================================================
-
             var slots = await profesionalService.ObtenerHorarioDisponiblePorProfesionalAsync(
-                    profesionalId,
-                    primerDiaMes,
-                    ultimoDiaMes);
+                profesionalId,
+                primerDiaMes,
+                ultimoDiaMes);
 
             var slotsPorDia = slots
                 .GroupBy(x => x.Fecha.Date)
                 .ToDictionary(
                     g => g.Key,
                     g => g.ToList());
-
-            // =========================================================
-            // Días del calendario
-            // =========================================================
 
             var diasDelMes = new List<CalendarioDiaDto>();
 
@@ -131,18 +130,12 @@ namespace PA_WEB.Controllers
                 });
             }
 
-            // =========================================================
-            // Fecha seleccionada
-            // =========================================================
-
             DateTime? fechaSeleccionada = null;
 
-            if (fecha.HasValue && fecha.Value.Date >= hoy) 
+            if (fecha.HasValue && fecha.Value.Date >= hoy)
+            {
                 fechaSeleccionada = fecha.Value.Date;
-
-            // =========================================================
-            // Horarios de la fecha seleccionada
-            // =========================================================
+            }
 
             var slotsDelDia = new List<DisponibilidadSlotDto>();
 

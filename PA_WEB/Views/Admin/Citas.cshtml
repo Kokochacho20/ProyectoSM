@@ -1,0 +1,237 @@
+﻿@model PA_WEB.Models.AdminCitasViewModel
+
+@{
+    ViewData["Title"] = "Citas";
+
+    string EstadoTexto(int estado)
+    {
+        return estado switch
+        {
+            1 => "Pendiente",
+            2 => "Aprobada",
+            3 => "Cancelada",
+            4 => "Finalizada",
+            _ => "Desconocido"
+        };
+    }
+
+    string EstadoBadge(int estado)
+    {
+        return estado switch
+        {
+            1 => "warning",
+            2 => "success",
+            3 => "secondary",
+            4 => "dark",
+            _ => "primary"
+        };
+    }
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-calendar-check"></i>
+                    SuperAdmin
+                </span>
+
+                <h3 class="clinic-title mb-1">Citas del sistema</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Consulte y administre las citas médicas registradas en el sistema.
+                </p>
+            </div>
+
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+                &larr; Volver al dashboard
+            </a>
+        </div>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info shadow-sm">
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <div class="clinic-card-soft p-4 mb-4">
+            <form method="get" asp-controller="Admin" asp-action="Citas" class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                    <label class="form-label">Buscar cita</label>
+                    <input type="text"
+                           name="texto"
+                           value="@Model.Texto"
+                           class="form-control"
+                           placeholder="Paciente, identificación, correo o doctor" />
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label">Estado</label>
+                    <select name="estadoCita" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="1" selected="@(Model.EstadoCita == 1)">Pendiente</option>
+                        <option value="2" selected="@(Model.EstadoCita == 2)">Aprobada</option>
+                        <option value="3" selected="@(Model.EstadoCita == 3)">Cancelada</option>
+                        <option value="4" selected="@(Model.EstadoCita == 4)">Finalizada</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="clinic-info-box h-100">
+                    <small class="opacity-75">Total mostrado</small>
+                    <h3 class="text-white mb-0">@Model.Citas.Count</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Pendientes</small>
+                    <h3 class="clinic-title mb-0">@Model.Citas.Count(x => x.EstadoCita == 1)</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Aprobadas</small>
+                    <h3 class="clinic-title mb-0">@Model.Citas.Count(x => x.EstadoCita == 2)</h3>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Finalizadas / canceladas</small>
+                    <h3 class="clinic-title mb-0">
+                        @(Model.Citas.Count(x => x.EstadoCita == 3 || x.EstadoCita == 4))
+                    </h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="clinic-table-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="clinic-title mb-0">Listado de citas</h5>
+                    <small class="text-muted">
+                        Total encontrado: @Model.Citas.Count
+                    </small>
+                </div>
+
+                <span class="clinic-badge">
+                    Administración de citas
+                </span>
+            </div>
+
+            @if (!Model.Citas.Any())
+            {
+                <div class="clinic-empty-state">
+                    No se encontraron citas con los filtros seleccionados.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Paciente</th>
+                                <th>Doctor</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Usuario que registró</th>
+                                <th style="min-width: 210px;">Cambiar estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var cita in Model.Citas)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@cita.NombrePaciente</div>
+                                        <small class="text-muted">
+                                            @cita.IdentificacionPaciente
+                                        </small>
+
+                                        <div class="small text-muted mt-1">
+                                            @cita.CorreoPaciente
+                                        </div>
+
+                                        @if (!string.IsNullOrWhiteSpace(cita.Motivo))
+                                        {
+                                            <div class="small text-muted mt-1">
+                                                Motivo: @cita.Motivo
+                                            </div>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        <div class="fw-semibold">@cita.ProfesionalMedico</div>
+                                        <small class="text-muted">
+                                            @cita.CorreoProfesional
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <div>@cita.FechaHoraInicio.ToString("dd/MM/yyyy")</div>
+                                        <small class="text-muted">
+                                            @cita.FechaHoraInicio.ToString("HH:mm") - @cita.FechaHoraFin.ToString("HH:mm")
+                                        </small>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-@EstadoBadge(cita.EstadoCita)">
+                                            @EstadoTexto(cita.EstadoCita)
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <div>@cita.UsuarioRegistro</div>
+                                        <small class="text-muted">@cita.CorreoUsuarioRegistro</small>
+                                    </td>
+
+                                    <td>
+                                        <form method="post"
+                                              asp-controller="Admin"
+                                              asp-action="ActualizarEstadoCita"
+                                              class="row g-2 align-items-center">
+
+                                            <input type="hidden" name="citaId" value="@cita.Id" />
+
+                                            <div class="col-8">
+                                                <select name="estadoCita" class="form-select form-select-sm">
+                                                    <option value="1" selected="@(cita.EstadoCita == 1)">Pendiente</option>
+                                                    <option value="2" selected="@(cita.EstadoCita == 2)">Aprobada</option>
+                                                    <option value="3" selected="@(cita.EstadoCita == 3)">Cancelada</option>
+                                                    <option value="4" selected="@(cita.EstadoCita == 4)">Finalizada</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="col-4 d-grid">
+                                                <button type="submit" class="btn btn-sm btn-primary">
+                                                    Guardar
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+
+    </div>
+</section>

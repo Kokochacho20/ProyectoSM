@@ -1,0 +1,287 @@
+﻿@model PA_WEB.Models.MedicoInicioViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Médico";
+
+    string EstadoTexto(int estado)
+    {
+        return estado switch
+        {
+            1 => "Pendiente",
+            2 => "Aprobada",
+            3 => "Cancelada",
+            4 => "Finalizada",
+            _ => "Desconocido"
+        };
+    }
+
+    string EstadoBadge(int estado)
+    {
+        return estado switch
+        {
+            1 => "warning",
+            2 => "success",
+            3 => "secondary",
+            4 => "dark",
+            _ => "primary"
+        };
+    }
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-plus-medical"></i>
+                    Médico
+                </span>
+
+                <h3 class="clinic-title mb-1">Dashboard médico</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Consulte sus citas, revise pacientes y atienda solicitudes pendientes.
+                </p>
+            </div>
+
+            <a asp-controller="Medico" asp-action="Index" class="btn btn-outline-primary">
+                Actualizar
+            </a>
+        </div>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info shadow-sm">
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4 col-xl-2">
+                <div class="clinic-info-box h-100">
+                    <small class="opacity-75">Pendientes</small>
+                    <h4 class="text-white mb-0">@Model.Dashboard.CitasPendientesAprobar</h4>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-2">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Aprobadas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasAprobadas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-2">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Finalizadas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasFinalizadas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-2">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Canceladas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasCanceladas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-2">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Notificaciones</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.NotificacionesPendientes</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-xl-4">
+                <div class="clinic-table-card h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="clinic-title mb-0">
+                            <i class="bx bx-bell"></i>
+                            Notificaciones
+                        </h5>
+
+                        <span class="clinic-badge">
+                            @Model.Notificaciones.Count pendientes
+                        </span>
+                    </div>
+
+                    @if (!Model.Notificaciones.Any())
+                    {
+                        <div class="clinic-empty-state">
+                            No tiene notificaciones pendientes.
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var notificacion in Model.Notificaciones.Take(5))
+                        {
+                            <div class="border rounded-3 p-3 mb-3 bg-white">
+                                <div class="fw-semibold">@notificacion.Titulo</div>
+                                <div class="text-muted small mb-2">@notificacion.Mensaje</div>
+                                <small class="text-muted">
+                                    @notificacion.FechaCreacion.ToString("dd/MM/yyyy HH:mm")
+                                </small>
+
+                                <form method="post"
+                                      asp-controller="Medico"
+                                      asp-action="MarcarNotificacionLeida"
+                                      class="mt-2">
+                                    <input type="hidden" name="notificacionId" value="@notificacion.Id" />
+
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        Marcar como leída
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+
+            <div class="col-xl-8">
+                <div class="clinic-table-card h-100">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                        <div>
+                            <h5 class="clinic-title mb-0">Citas del médico</h5>
+                            <small class="text-muted">
+                                Revise, apruebe, cancele o finalice citas.
+                            </small>
+                        </div>
+
+                        <form method="get" asp-controller="Medico" asp-action="Index">
+                            <select name="estadoCita" class="form-select" onchange="this.form.submit()">
+                                <option value="">Todas</option>
+                                <option value="1" selected="@(Model.EstadoCitaSeleccionado == 1)">Pendientes</option>
+                                <option value="2" selected="@(Model.EstadoCitaSeleccionado == 2)">Aprobadas</option>
+                                <option value="3" selected="@(Model.EstadoCitaSeleccionado == 3)">Canceladas</option>
+                                <option value="4" selected="@(Model.EstadoCitaSeleccionado == 4)">Finalizadas</option>
+                            </select>
+                        </form>
+                    </div>
+
+                    @if (!Model.Citas.Any())
+                    {
+                        <div class="clinic-empty-state">
+                            No hay citas para mostrar con el filtro seleccionado.
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Paciente</th>
+                                        <th>Fecha</th>
+                                        <th>Contacto</th>
+                                        <th>Estado</th>
+                                        <th class="text-end">Acciones</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var cita in Model.Citas)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="fw-semibold">@cita.NombrePaciente</div>
+                                                <small class="text-muted">
+                                                    @cita.IdentificacionPaciente
+                                                </small>
+
+                                                @if (!string.IsNullOrWhiteSpace(cita.Motivo))
+                                                {
+                                                    <div class="small text-muted mt-1">
+                                                        Motivo: @cita.Motivo
+                                                    </div>
+                                                }
+                                            </td>
+
+                                            <td>
+                                                <div>@cita.FechaHoraInicio.ToString("dd/MM/yyyy")</div>
+                                                <small class="text-muted">
+                                                    @cita.FechaHoraInicio.ToString("HH:mm") - @cita.FechaHoraFin.ToString("HH:mm")
+                                                </small>
+                                            </td>
+
+                                            <td>
+                                                <div>@cita.CorreoPaciente</div>
+                                                <small class="text-muted">@cita.TelefonoPaciente</small>
+                                            </td>
+
+                                            <td>
+                                                <span class="badge bg-@EstadoBadge(cita.EstadoCita)">
+                                                    @EstadoTexto(cita.EstadoCita)
+                                                </span>
+                                            </td>
+
+                                            <td class="text-end">
+                                                @if (cita.EstadoCita == 1)
+                                                {
+                                                    <form method="post"
+                                                          asp-controller="Medico"
+                                                          asp-action="ActualizarEstado"
+                                                          class="d-inline">
+                                                        <input type="hidden" name="citaId" value="@cita.Id" />
+                                                        <input type="hidden" name="estadoCita" value="2" />
+
+                                                        <button type="submit" class="btn btn-sm btn-success mb-1">
+                                                            Aprobar
+                                                        </button>
+                                                    </form>
+
+                                                    <form method="post"
+                                                          asp-controller="Medico"
+                                                          asp-action="ActualizarEstado"
+                                                          class="d-inline">
+                                                        <input type="hidden" name="citaId" value="@cita.Id" />
+                                                        <input type="hidden" name="estadoCita" value="3" />
+
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-1">
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                }
+                                                else if (cita.EstadoCita == 2)
+                                                {
+                                                    <form method="post"
+                                                          asp-controller="Medico"
+                                                          asp-action="ActualizarEstado"
+                                                          class="d-inline">
+                                                        <input type="hidden" name="citaId" value="@cita.Id" />
+                                                        <input type="hidden" name="estadoCita" value="4" />
+
+                                                        <button type="submit" class="btn btn-sm btn-primary mb-1">
+                                                            Finalizar
+                                                        </button>
+                                                    </form>
+
+                                                    <form method="post"
+                                                          asp-controller="Medico"
+                                                          asp-action="ActualizarEstado"
+                                                          class="d-inline">
+                                                        <input type="hidden" name="citaId" value="@cita.Id" />
+                                                        <input type="hidden" name="estadoCita" value="3" />
+
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger mb-1">
+                                                            Cancelar
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

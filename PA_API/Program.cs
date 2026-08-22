@@ -36,6 +36,11 @@ builder.Services.AddTransient<ICitaMedicaService, CitaMedicaService>();
 builder.Services.AddTransient<IEmailService, EmailService>();
 builder.Services.AddTransient<IProfesionalService, ProfesionalService>();
 builder.Services.AddTransient<IEspecialidadesService, EspecialidadesService>();
+
+builder.Services.AddTransient<IAdminService, AdminService>();
+builder.Services.AddTransient<IMedicoService, MedicoService>();
+builder.Services.AddTransient<INotificacionService, NotificacionService>();
+
 builder.Services.AddScoped<IUtilesService, UtilesService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

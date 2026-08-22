@@ -11,27 +11,19 @@ USE pa_db;
 GO
 
 -- =========================================================
--- Usuario
--- Paciente que se registra y reserva citas.
+-- RolUsuario
 -- =========================================================
-CREATE TABLE Usuario (
-    Id                              INT IDENTITY(1,1)  NOT NULL,
-    Identificacion                  NVARCHAR(20)       NOT NULL,
-    NombreCompleto                  NVARCHAR(200)      NOT NULL,
-    CorreoElectronico               NVARCHAR(200)      NOT NULL,
-    Telefono                        NVARCHAR(20)       NOT NULL,
-    FechaNacimiento                 DATE               NOT NULL,
-    PasswordHash                    NVARCHAR(300)      NOT NULL,
-    TemporaryPassword               BIT                NOT NULL DEFAULT 0,
-    FechaExpiracionPasswordTemporal DATETIME2          NULL,
-    FechaRegistro                   DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
-    Estado                          BIT                NOT NULL DEFAULT 1,
+CREATE TABLE RolUsuario (
+    Id           TINYINT            NOT NULL,
+    Nombre       NVARCHAR(50)       NOT NULL,
+    Descripcion  NVARCHAR(200)      NULL,
+    Estado       BIT                NOT NULL DEFAULT 1,
 
-    CONSTRAINT PK_Usuario PRIMARY KEY (Id),
-    CONSTRAINT UQ_Usuario_Correo UNIQUE (CorreoElectronico),
-    CONSTRAINT UQ_Usuario_Identificacion UNIQUE (Identificacion)
+    CONSTRAINT PK_RolUsuario PRIMARY KEY (Id),
+    CONSTRAINT UQ_RolUsuario_Nombre UNIQUE (Nombre)
 );
 GO
+
 
 -- =========================================================
 -- EspecialidadMedica
@@ -53,7 +45,7 @@ GO
 CREATE TABLE ProfesionalMedico (
     Id                 INT IDENTITY(1,1)   NOT NULL,
     NombreCompleto     NVARCHAR(200)       NOT NULL,
-    CodigoMedico       NVARCHAR(8)        NOT NULL,
+    CodigoMedico       NVARCHAR(8)         NOT NULL,
     Descripcion        NVARCHAR(1000)      NULL,
     PrecioConsulta     DECIMAL(10,2)       NOT NULL,
     CorreoElectronico  NVARCHAR(200)       NOT NULL,
@@ -107,6 +99,43 @@ CREATE TABLE HorarioProfesional (
 GO
 
 -- =========================================================
+-- Usuario
+-- Paciente / Doctor / SuperAdmin que se registra e inicia sesión.
+-- RolId es obligatorio. ProfesionalMedicoId solo aplica cuando el
+-- usuario es Doctor (Rol=2) y liga 1:1 con ProfesionalMedico.
+-- =========================================================
+CREATE TABLE Usuario (
+    Id                              INT IDENTITY(1,1)  NOT NULL,
+    Identificacion                  NVARCHAR(20)       NOT NULL,
+    NombreCompleto                  NVARCHAR(200)      NOT NULL,
+    CorreoElectronico               NVARCHAR(200)      NOT NULL,
+    Telefono                        NVARCHAR(20)       NOT NULL,
+    FechaNacimiento                 DATE               NOT NULL,
+    PasswordHash                    NVARCHAR(300)      NOT NULL,
+    TemporaryPassword               BIT                NOT NULL DEFAULT 0,
+    FechaExpiracionPasswordTemporal DATETIME2          NULL,
+    FechaRegistro                   DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+    Estado                          BIT                NOT NULL DEFAULT 1,
+    RolId                           TINYINT            NOT NULL,
+    ProfesionalMedicoId             INT                NULL,
+
+    CONSTRAINT PK_Usuario PRIMARY KEY (Id),
+    CONSTRAINT UQ_Usuario_Correo UNIQUE (CorreoElectronico),
+    CONSTRAINT UQ_Usuario_Identificacion UNIQUE (Identificacion),
+    CONSTRAINT FK_Usuario_RolUsuario FOREIGN KEY (RolId)
+        REFERENCES RolUsuario (Id),
+    CONSTRAINT FK_Usuario_ProfesionalMedico FOREIGN KEY (ProfesionalMedicoId)
+        REFERENCES ProfesionalMedico (Id)
+);
+GO
+
+-- Un ProfesionalMedico solo puede estar ligado a un único Usuario
+CREATE UNIQUE INDEX UX_Usuario_ProfesionalMedicoId
+    ON Usuario (ProfesionalMedicoId)
+    WHERE ProfesionalMedicoId IS NOT NULL;
+GO
+
+-- =========================================================
 -- CitaMedica
 -- Los datos del paciente atendido se guardan aparte del Usuario logueado
 -- para soportar "cita para otra persona" sin tocar la tabla Usuario.
@@ -148,7 +177,27 @@ CREATE UNIQUE INDEX UQ_CitaMedica_ProfesionalHorarioActivo
     WHERE EstadoCita IN (1, 2);
 GO
 
--- Índices de apoyo para las consultas más frecuentes
-CREATE INDEX IX_CitaMedica_UsuarioId ON CitaMedica (UsuarioId);
-CREATE INDEX IX_HorarioProfesional_ProfesionalDia ON HorarioProfesional (ProfesionalMedicoId, DiaSemana);
+-- =========================================================
+-- Notificacion
+-- =========================================================
+CREATE TABLE Notificacion (
+    Id             INT IDENTITY(1,1)  NOT NULL,
+    UsuarioId      INT                NOT NULL,
+    CitaMedicaId   INT                NULL,
+    Titulo         NVARCHAR(150)      NOT NULL,
+    Mensaje        NVARCHAR(500)      NOT NULL,
+    Leida          BIT                NOT NULL DEFAULT 0,
+    FechaCreacion  DATETIME2          NOT NULL DEFAULT SYSUTCDATETIME(),
+
+    CONSTRAINT PK_Notificacion PRIMARY KEY (Id),
+    CONSTRAINT FK_Notificacion_Usuario FOREIGN KEY (UsuarioId)
+        REFERENCES Usuario (Id),
+    CONSTRAINT FK_Notificacion_CitaMedica FOREIGN KEY (CitaMedicaId)
+        REFERENCES CitaMedica (Id)
+);
 GO
+
+CREATE INDEX IX_Notificacion_Usuario_Leida
+    ON Notificacion (UsuarioId, Leida, FechaCreacion);
+GO
+

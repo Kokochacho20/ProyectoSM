@@ -135,7 +135,10 @@ namespace PA_API.Services
                     usuario.Id,
                     usuario.Identificacion,
                     usuario.NombreCompleto,
-                    usuario.CorreoElectronico);
+                    usuario.CorreoElectronico,
+                    usuario.RolId,
+                    usuario.RolNombre,
+                    usuario.ProfesionalMedicoId);
 
                 var expiraEn = DateTime.UtcNow.AddMinutes(30);
 
@@ -152,7 +155,11 @@ namespace PA_API.Services
                         NombreCompleto = usuario.NombreCompleto,
                         CorreoElectronico = usuario.CorreoElectronico,
                         Telefono = usuario.Telefono,
-                        FechaNacimiento = usuario.FechaNacimiento
+                        FechaNacimiento = usuario.FechaNacimiento,
+                        RolId = usuario.RolId,
+                        RolNombre = usuario.RolNombre,
+                        ProfesionalMedicoId = usuario.ProfesionalMedicoId,
+                        ProfesionalNombre = usuario.ProfesionalNombre
                     }
                 };
 
@@ -289,7 +296,7 @@ namespace PA_API.Services
                     StoreProceduresConstants.sp_actualizar_contrasena,
                     new
                     {
-                        request.UsuarioId,
+                        UsuarioId = request.UsuarioId,
                         PasswordHash = nuevoHash,
                         TemporaryPassword = false,
                         FechaExpiracionPasswordTemporal = (DateTime?)null

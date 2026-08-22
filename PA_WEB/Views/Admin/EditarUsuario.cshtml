@@ -1,0 +1,116 @@
+﻿@model PA_WEB.Models.AdminEditarUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Editar usuario";
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-edit"></i>
+                    SuperAdmin
+                </span>
+
+                <h3 class="clinic-title mb-1">Editar usuario</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Modifique la información general, rol y relación médica del usuario.
+                </p>
+            </div>
+
+            <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-secondary">
+                &larr; Volver a usuarios
+            </a>
+        </div>
+
+        @if (ViewBag.Mensaje != null)
+        {
+            <div class="alert alert-danger shadow-sm">
+                @ViewBag.Mensaje
+            </div>
+        }
+
+        <div class="clinic-card-soft p-4">
+            <form method="post" asp-controller="Admin" asp-action="EditarUsuario" class="row g-3">
+
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="Estado" />
+
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                <div class="col-md-6">
+                    <label asp-for="Identificacion" class="form-label"></label>
+                    <input asp-for="Identificacion" class="form-control" />
+                    <span asp-validation-for="Identificacion" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="NombreCompleto" class="form-label"></label>
+                    <input asp-for="NombreCompleto" class="form-control" />
+                    <span asp-validation-for="NombreCompleto" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="CorreoElectronico" class="form-label"></label>
+                    <input asp-for="CorreoElectronico" class="form-control" />
+                    <span asp-validation-for="CorreoElectronico" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="Telefono" class="form-label"></label>
+                    <input asp-for="Telefono" class="form-control" />
+                    <span asp-validation-for="Telefono" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="FechaNacimiento" class="form-label"></label>
+                    <input asp-for="FechaNacimiento" type="date" class="form-control" />
+                    <span asp-validation-for="FechaNacimiento" class="text-danger small"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="RolId" class="form-label"></label>
+                    <select asp-for="RolId" class="form-select">
+                        <option value="1">SuperAdmin</option>
+                        <option value="2">Doctor</option>
+                        <option value="3">Paciente</option>
+                    </select>
+                    <span asp-validation-for="RolId" class="text-danger small"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="ProfesionalMedicoId" class="form-label"></label>
+                    <select asp-for="ProfesionalMedicoId" class="form-select">
+                        <option value="">Sin doctor asociado</option>
+
+                        @foreach (var doctor in Model.Doctores)
+                        {
+                            <option value="@doctor.Id">
+                                @doctor.NombreCompleto - @doctor.CorreoElectronico
+                            </option>
+                        }
+                    </select>
+
+                    <small class="text-muted">
+                        Solo seleccione un doctor si el rol del usuario será Doctor.
+                    </small>
+                </div>
+
+                <div class="col-12 d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+                    <a asp-controller="Admin" asp-action="Usuarios" class="btn btn-outline-secondary">
+                        Cancelar
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Guardar cambios
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+    </div>
+</section>

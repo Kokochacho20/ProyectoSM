@@ -1,0 +1,174 @@
+﻿@model PA_WEB.Models.AdminInicioViewModel
+
+@{
+    ViewData["Title"] = "Dashboard Administrador";
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-shield-quarter"></i>
+                    SuperAdmin
+                </span>
+
+                <h3 class="clinic-title mb-1">Dashboard administrativo</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Vista general del sistema, usuarios, doctores y citas médicas.
+                </p>
+            </div>
+        </div>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info shadow-sm">
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-4 col-xl-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Usuarios registrados</small>
+                    <h3 class="clinic-title mb-0">@Model.Dashboard.UsuariosRegistrados</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Doctores</small>
+                    <h3 class="clinic-title mb-0">@Model.Dashboard.Doctores</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Especialidades</small>
+                    <h3 class="clinic-title mb-0">@Model.Dashboard.Especialidades</h3>
+                </div>
+            </div>
+
+            <div class="col-md-4 col-xl-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Citas agendadas</small>
+                    <h3 class="clinic-title mb-0">@Model.Dashboard.CitasAgendadas</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="clinic-info-box h-100">
+                    <small class="opacity-75">Pendientes</small>
+                    <h4 class="text-white mb-0">@Model.Dashboard.CitasPendientes</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Aprobadas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasAprobadas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Finalizadas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasFinalizadas</h4>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="clinic-card-soft p-4 h-100">
+                    <small class="text-muted">Canceladas</small>
+                    <h4 class="clinic-title mb-0">@Model.Dashboard.CitasCanceladas</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-xl-7">
+                <div class="clinic-table-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="clinic-title mb-0">Usuarios recientes</h5>
+                        <span class="clinic-badge">@Model.Usuarios.Count usuarios</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Correo</th>
+                                    <th>Rol</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var usuario in Model.Usuarios.Take(8))
+                                {
+                                    <tr>
+                                        <td class="fw-semibold">@usuario.NombreCompleto</td>
+                                        <td>@usuario.CorreoElectronico</td>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                @usuario.RolNombre
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-5">
+                <div class="clinic-table-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="clinic-title mb-0">Doctores</h5>
+                        <span class="clinic-badge">@Model.Doctores.Count doctores</span>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Usuario</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var doctor in Model.Doctores.Take(8))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="fw-semibold">@doctor.NombreCompleto</div>
+                                            <small class="text-muted">@doctor.CorreoElectronico</small>
+                                        </td>
+                                        <td>
+                                            @if (doctor.TieneUsuario)
+                                            {
+                                                <span class="badge bg-success">Creado</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning">Pendiente</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

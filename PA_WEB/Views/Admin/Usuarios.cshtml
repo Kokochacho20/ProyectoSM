@@ -1,0 +1,201 @@
+﻿@model PA_WEB.Models.AdminInicioViewModel
+
+@{
+    ViewData["Title"] = "Usuarios";
+
+    var texto = ViewBag.Texto as string;
+    var rolId = ViewBag.RolId as int?;
+
+    string RolBadge(int rol)
+    {
+        return rol switch
+        {
+            1 => "danger",
+            2 => "primary",
+            3 => "success",
+            _ => "secondary"
+        };
+    }
+}
+
+<section class="py-4">
+    <div class="container-fluid">
+
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-4">
+            <div>
+                <span class="home-section-badge">
+                    <i class="bx bx-user"></i>
+                    SuperAdmin
+                </span>
+
+                <h3 class="clinic-title mb-1">Usuarios del sistema</h3>
+
+                <p class="clinic-subtitle mb-0">
+                    Consulte, edite, habilite o deshabilite usuarios registrados.
+                </p>
+            </div>
+
+            <a asp-controller="Admin" asp-action="Index" class="btn btn-outline-secondary">
+                &larr; Volver al dashboard
+            </a>
+        </div>
+
+        @if (TempData["Mensaje"] != null)
+        {
+            <div class="alert alert-info shadow-sm">
+                @TempData["Mensaje"]
+            </div>
+        }
+
+        <div class="clinic-card-soft p-4 mb-4">
+            <form method="get" asp-controller="Admin" asp-action="Usuarios" class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                    <label class="form-label">Buscar usuario</label>
+                    <input type="text"
+                           name="texto"
+                           value="@texto"
+                           class="form-control"
+                           placeholder="Nombre, correo o identificación" />
+                </div>
+
+                <div class="col-lg-4">
+                    <label class="form-label">Rol</label>
+                    <select name="rolId" class="form-select">
+                        <option value="">Todos los roles</option>
+                        <option value="1" selected="@(rolId == 1)">SuperAdmin</option>
+                        <option value="2" selected="@(rolId == 2)">Doctor</option>
+                        <option value="3" selected="@(rolId == 3)">Paciente</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <div class="clinic-table-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+                <div>
+                    <h5 class="clinic-title mb-0">Listado de usuarios</h5>
+                    <small class="text-muted">
+                        Total encontrado: @Model.Usuarios.Count
+                    </small>
+                </div>
+
+                <span class="clinic-badge">
+                    Gestión de usuarios
+                </span>
+            </div>
+
+            @if (!Model.Usuarios.Any())
+            {
+                <div class="clinic-empty-state">
+                    No se encontraron usuarios con los filtros seleccionados.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Usuario</th>
+                                <th>Contacto</th>
+                                <th>Rol</th>
+                                <th>Estado</th>
+                                <th>Doctor asociado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            @foreach (var usuario in Model.Usuarios)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@usuario.NombreCompleto</div>
+                                        <small class="text-muted">@usuario.Identificacion</small>
+                                    </td>
+
+                                    <td>
+                                        <div>@usuario.CorreoElectronico</div>
+                                        <small class="text-muted">@usuario.Telefono</small>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-@RolBadge(usuario.RolId)">
+                                            @usuario.RolNombre
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if (usuario.Estado)
+                                        {
+                                            <span class="badge bg-success">Activo</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Inactivo</span>
+                                        }
+                                    </td>
+
+                                    <td>
+                                        @if (!string.IsNullOrWhiteSpace(usuario.ProfesionalNombre))
+                                        {
+                                            <span>@usuario.ProfesionalNombre</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No aplica</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-end">
+                                        <a asp-controller="Admin"
+                                           asp-action="EditarUsuario"
+                                           asp-route-usuarioId="@usuario.Id"
+                                           class="btn btn-sm btn-primary mb-1">
+                                            Editar
+                                        </a>
+
+                                        @if (usuario.Estado)
+                                        {
+                                            <form method="post"
+                                                  asp-controller="Admin"
+                                                  asp-action="CambiarEstadoUsuario"
+                                                  class="d-inline">
+                                                <input type="hidden" name="usuarioId" value="@usuario.Id" />
+                                                <input type="hidden" name="estado" value="false" />
+
+                                                <button type="submit" class="btn btn-sm btn-outline-danger mb-1">
+                                                    Deshabilitar
+                                                </button>
+                                            </form>
+                                        }
+                                        else
+                                        {
+                                            <form method="post"
+                                                  asp-controller="Admin"
+                                                  asp-action="CambiarEstadoUsuario"
+                                                  class="d-inline">
+                                                <input type="hidden" name="usuarioId" value="@usuario.Id" />
+                                                <input type="hidden" name="estado" value="true" />
+
+                                                <button type="submit" class="btn btn-sm btn-outline-success mb-1">
+                                                    Habilitar
+                                                </button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</section>
