@@ -55,7 +55,7 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var citas = await conexion.QueryAsync<MedicoCitaDto>(
-                    StoreProceduresConstants.sp_medico_citas,
+                    StoreProceduresConstants.sp_citas_lista,
                     new
                     {
                         ProfesionalMedicoId = profesionalMedicoId,
@@ -79,39 +79,26 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var resultado = await conexion.QueryFirstOrDefaultAsync<int>(
-                    StoreProceduresConstants.sp_medico_actualizar_estado_cita,
-                    new
-                    {
-                        ProfesionalMedicoId = profesionalMedicoId,
-                        CitaId = citaId,
-                        EstadoCita = estadoCita
-                    },
+                    StoreProceduresConstants.sp_actualizar_estado_cita,
+                    new { CitaId = citaId, EstadoCita = estadoCita, ProfesionalMedicoId = profesionalMedicoId },
                     commandType: CommandType.StoredProcedure);
 
-                if (resultado == 1)
+                var mensaje = estadoCita switch
                 {
-                    var mensaje = estadoCita switch
-                    {
-                        2 => "Cita aprobada correctamente.",
-                        3 => "Cita cancelada correctamente.",
-                        4 => "Cita marcada como finalizada correctamente.",
-                        _ => "Estado actualizado correctamente."
-                    };
+                    2 => "Cita aprobada correctamente.",
+                    3 => "Cita cancelada correctamente.",
+                    4 => "Cita marcada como finalizada correctamente.",
+                    _ => "Estado actualizado correctamente."
+                };
 
-                    return ResultDto.Ok(message: mensaje);
-                }
-
-                return ResultDto.Fail(
-                    StatusCodes.Status400BadRequest,
-                    "No se pudo actualizar el estado de la cita.");
+                return resultado == 1
+                    ? ResultDto.Ok(message: mensaje)
+                    : ResultDto.Fail(StatusCodes.Status400BadRequest, "No se pudo actualizar el estado de la cita.");
             }
             catch (SqlException ex)
             {
                 logger.LogError(ex, "Error SQL al actualizar estado de cita.");
-
-                return ResultDto.Fail(
-                    StatusCodes.Status400BadRequest,
-                    ex.Message);
+                return ResultDto.Fail(StatusCodes.Status400BadRequest, ex.Message);
             }
             catch (Exception ex)
             {

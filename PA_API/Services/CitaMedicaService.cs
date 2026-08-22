@@ -71,8 +71,8 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var cita = await conexion.QueryFirstOrDefaultAsync<CitaResponseDto>(
-                   StoreProceduresConstants.sp_obtener_cita,
-                    new { Id = citaId },
+                   StoreProceduresConstants.sp_citas_lista,
+                    new { UsuarioId = citaId },
                     commandType: CommandType.StoredProcedure);
 
                 if (cita is null)
@@ -95,7 +95,7 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var citas = await conexion.QueryAsync<CitaResponseDto>(
-                    StoreProceduresConstants.sp_obtener_citas,
+                    StoreProceduresConstants.sp_citas_lista,
                     new { UsuarioId = usuarioId },
                     commandType: CommandType.StoredProcedure);
 

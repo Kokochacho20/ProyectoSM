@@ -156,7 +156,7 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var usuarios = await conexion.QueryAsync<AdminUsuarioDto>(
-                    StoreProceduresConstants.sp_admin_usuarios_lista,
+                    StoreProceduresConstants.sp_usuarios_lista,
                     new
                     {
                         Texto = texto,
@@ -180,10 +180,10 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var usuario = await conexion.QueryFirstOrDefaultAsync<AdminUsuarioDto>(
-                    StoreProceduresConstants.sp_admin_usuario_obtener,
+                    StoreProceduresConstants.sp_usuario_obtener,
                     new
                     {
-                        UsuarioId = usuarioId
+                        Id = usuarioId
                     },
                     commandType: CommandType.StoredProcedure);
 
@@ -363,7 +363,7 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var citas = await conexion.QueryAsync<AdminCitaDto>(
-                    StoreProceduresConstants.sp_admin_citas_lista,
+                    StoreProceduresConstants.sp_citas_lista,
                     new
                     {
                         Texto = texto,
@@ -387,36 +387,25 @@ namespace PA_API.Services
                 using IDbConnection conexion = new SqlConnection(_connectionString);
 
                 var resultado = await conexion.QueryFirstOrDefaultAsync<int>(
-                    StoreProceduresConstants.sp_admin_actualizar_estado_cita,
-                    new
-                    {
-                        CitaId = citaId,
-                        EstadoCita = estadoCita
-                    },
+                    StoreProceduresConstants.sp_actualizar_estado_cita,
+                    new { CitaId = citaId, EstadoCita = estadoCita, ProfesionalMedicoId = (int?)null },
                     commandType: CommandType.StoredProcedure);
 
-                if (resultado == 1)
-                {
-                    return ResultDto.Ok(message: "Estado de cita actualizado correctamente.");
-                }
-
-                return ResultDto.Fail(
-                    StatusCodes.Status400BadRequest,
-                    "No se pudo actualizar el estado de la cita.");
+                return resultado == 1
+                    ? ResultDto.Ok(message: "Estado de cita actualizado correctamente.")
+                    : ResultDto.Fail(StatusCodes.Status400BadRequest, "No se pudo actualizar el estado de la cita.");
             }
             catch (SqlException ex)
             {
                 logger.LogError(ex, "Error SQL al actualizar estado de cita.");
-
-                return ResultDto.Fail(
-                    StatusCodes.Status400BadRequest,
-                    ex.Message);
+                return ResultDto.Fail(StatusCodes.Status400BadRequest, ex.Message);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Error al actualizar estado de cita.");
                 throw;
             }
+        
         }
     }
 }
